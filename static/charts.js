@@ -37,7 +37,8 @@ const I18N = {
     selectModelHint: "-- select a model --",
     cancel: "Cancel", save: "Save",
     updating: "Updating...", upToDate: "Up-to-date!", failed: "Failed",
-    chatError: "Error: ",
+    chatError: "Error: ", noChartsSelected: "No charts selected — check at least one chart to include data context.",
+    loadingData: "Loading...", selectModelFirst: "Please select a model before saving.",
   },
   zh: {
     title: "人民币汇率仪表盘",
@@ -72,7 +73,8 @@ const I18N = {
     selectModelHint: "-- 选择模型 --",
     cancel: "取消", save: "保存",
     updating: "更新中...", upToDate: "已是最新！", failed: "失败",
-    chatError: "错误：",
+    chatError: "错误：", noChartsSelected: "未选择图表——请至少勾选一个图表以提供数据上下文。",
+    loadingData: "加载中...", selectModelFirst: "请先选择模型再保存。",
   }
 };
 
@@ -363,9 +365,16 @@ function renderMergedChart(canvasId, datasets) {
     charts[canvasId].destroy();
   }
 
+  const noDataId = canvasId.replace("chart", "noData");
+  const noDataEl = document.getElementById(noDataId);
+
   // Use the dates from the first non-empty dataset
   const reference = datasets.find(d => d.data && d.data.length > 0);
-  if (!reference) return;
+  if (!reference) {
+    if (noDataEl) { noDataEl.style.display = ""; document.getElementById(canvasId).style.display = "none"; }
+    return;
+  }
+  if (noDataEl) { noDataEl.style.display = "none"; document.getElementById(canvasId).style.display = ""; }
   const labels = reference.data.map(d => d.date);
   const pointRadius = labels.length > 60 ? 0 : 3;
 
@@ -483,6 +492,8 @@ function toggleMode() {
 }
 
 async function loadAll() {
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = t("loadingData"); }
   let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd;
   try {
     [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd] = await Promise.all([
@@ -501,7 +512,10 @@ async function loadAll() {
     ]);
   } catch (e) {
     console.error("Failed to load exchange rates:", e);
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.setAttribute("data-i18n", "refresh"); refreshBtn.textContent = t("refresh"); }
     return;
+  } finally {
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.setAttribute("data-i18n", "refresh"); refreshBtn.textContent = t("refresh"); }
   }
 
   if (mergedMode) {
@@ -663,6 +677,7 @@ function saveSettings() {
   const url   = document.getElementById("settingUrl").value.trim();
   const key   = document.getElementById("settingKey").value.trim();
   const model = document.getElementById("settingModel").value.trim();
+  if (!model) { alert(t("selectModelFirst")); return; }
   localStorage.setItem("llm_url",   url);
   localStorage.setItem("llm_key",   key);
   localStorage.setItem("llm_model", model);
@@ -749,6 +764,12 @@ async function sendChat() {
 
   // Collect selected chart data
   const checked = [...document.querySelectorAll("#chartCheckboxes input:checked")].map(c => c.value);
+  if (checked.length === 0) {
+    appendBubble("assistant", t("noChartsSelected"));
+    chatHistory.pop(); // remove the user message we just pushed
+    input.value = text;
+    return;
+  }
   const data = checked.map(id => {
     const chart = charts[id];
     if (!chart) return null;

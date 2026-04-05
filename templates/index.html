@@ -174,7 +174,7 @@
     <label><span data-i18n="to">To</span>
       <input type="date" id="toDate" />
     </label>
-    <button onclick="loadAll()" data-i18n="refresh">Refresh</button>
+    <button id="refreshBtn" onclick="loadAll()" data-i18n="refresh">Refresh</button>
     <div class="quick-ranges">
       <button onclick="setAll()" id="qrAll" data-i18n="all">All</button>
       <span style="width:1px;background:#e2e8f0;align-self:stretch;margin:0 4px"></span>
@@ -280,14 +280,17 @@
     <div class="chart-card" id="mergedCNYCard">
       <h2 data-i18n="mergedCNYTitle">Western (GBP / EUR / USD) -> CNY</h2>
       <canvas id="chartMergedCNY"></canvas>
+      <div id="noDataMergedCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
     </div>
     <div class="chart-card">
       <h2 data-i18n="mergedCrossTitle">Cross Rates (GBP / EUR / USD)</h2>
       <canvas id="chartMergedCross"></canvas>
+      <div id="noDataMergedCross" class="no-data" style="display:none" data-i18n="noData">No data available</div>
     </div>
     <div class="chart-card">
       <h2 data-i18n="mergedCNYOutTitle">CNY Outbound</h2>
       <canvas id="chartMergedCNYOut"></canvas>
+      <div id="noDataMergedCNYOut" class="no-data" style="display:none" data-i18n="noData">No data available</div>
     </div>
   </div>
   </div>
