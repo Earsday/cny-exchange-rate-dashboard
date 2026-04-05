@@ -58,9 +58,11 @@ def fetch_one(fetch_date: str, base: str, targets: list):
             return results
         except Exception as e:
             if attempt < MAX_RETRIES:
-                time.sleep(RETRY_DELAY * attempt)
+                delay = RETRY_DELAY ** attempt
+                print(f"  [WARN] {base} on {fetch_date} attempt {attempt} failed ({type(e).__name__}: {e}), retrying in {delay}s...")
+                time.sleep(delay)
             else:
-                print(f"  [ERROR] {base} on {fetch_date} failed after {MAX_RETRIES} attempts: {e}")
+                print(f"  [ERROR] {base} on {fetch_date} failed after {MAX_RETRIES} attempts ({type(e).__name__}: {e})")
                 return []
 
 

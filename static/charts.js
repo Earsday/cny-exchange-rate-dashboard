@@ -168,6 +168,7 @@ function setRange(days) {
 async function setAll() {
   const res = await fetch("/api/date-range");
   const { min, max } = await res.json();
+  if (!min || !max) return;
   document.getElementById("fromDate").value = min;
   document.getElementById("toDate").value = max;
   document.querySelectorAll(".quick-ranges button").forEach(b => b.classList.remove("active"));
