@@ -547,7 +547,6 @@ async function loadAll() {
     ]);
   } catch (e) {
     console.error("Failed to load exchange rates:", e);
-    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.setAttribute("data-i18n", "refresh"); refreshBtn.textContent = t("refresh"); }
     return;
   } finally {
     if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.setAttribute("data-i18n", "refresh"); refreshBtn.textContent = t("refresh"); }
@@ -814,16 +813,16 @@ async function sendChat() {
 
   input.value = "";
   appendBubble("user", text);
-  chatHistory.push({ role: "user", content: text });
 
   // Collect selected chart data
   const checked = [...document.querySelectorAll("#chartCheckboxes input:checked")].map(c => c.value);
   if (checked.length === 0) {
     appendBubble("assistant", t("noChartsSelected"));
-    chatHistory.pop(); // remove the user message we just pushed
     input.value = text;
     return;
   }
+
+  chatHistory.push({ role: "user", content: text });
   const data = checked.map(id => {
     const chart = charts[id];
     if (!chart) return null;

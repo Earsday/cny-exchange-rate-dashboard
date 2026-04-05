@@ -87,11 +87,14 @@ def models(body: Dict[str, Any]):
     base_url = body.get("base_url", "http://localhost:6655").rstrip("/")
     api_key  = body.get("api_key", "")
     headers  = {"Authorization": f"Bearer {api_key}"}
-    for path in ("/v1/model/info", "/model/info"):
-        resp = http_requests.get(f"{base_url}{path}", headers=headers, timeout=15)
-        if resp.status_code == 200:
-            return resp.json()
-    raise HTTPException(status_code=502, detail=f"Could not fetch models (tried /v1/model/info and /model/info)")
+    try:
+        for path in ("/v1/model/info", "/model/info"):
+            resp = http_requests.get(f"{base_url}{path}", headers=headers, timeout=15)
+            if resp.status_code == 200:
+                return resp.json()
+    except http_requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Could not reach LiteLLM: {e}")
+    raise HTTPException(status_code=502, detail="Could not fetch models (tried /v1/model/info and /model/info)")
 
 
 @app.get("/api/date-range")
