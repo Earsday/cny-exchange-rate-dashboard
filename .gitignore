@@ -1,6 +1,3 @@
-# Database
-rates.db
-
 # Python
 __pycache__/
 *.pyc
@@ -8,6 +5,9 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+
+# Claude
+.claude/
 
 # OS
 .DS_Store

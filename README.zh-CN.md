@@ -2,6 +2,8 @@
 
 [English](README.md) | **简体中文**
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 一个自托管的网页仪表盘，用于追踪以人民币为中心的汇率数据，支持交互式图表、AI 智能分析和中英双语界面。
 
 ## 功能特性

@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 A self-hosted web dashboard for tracking CNY-centric exchange rates with interactive charts, AI-powered analysis, and bilingual (English / 简体中文) support.
 
 ## Features

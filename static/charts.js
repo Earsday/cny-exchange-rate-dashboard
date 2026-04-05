@@ -222,6 +222,7 @@ async function fetchRates(base, target) {
   if (from) params.append("from", from);
   if (to) params.append("to", to);
   const res = await fetch(`/api/rates?${params}`);
+  if (!res.ok) throw new Error(`Failed to fetch ${base}/${target}: ${res.status}`);
   return res.json();
 }
 
@@ -481,20 +482,26 @@ function toggleMode() {
 }
 
 async function loadAll() {
-  const [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd] = await Promise.all([
-    fetchRates("GBP", "CNY"),
-    fetchRates("EUR", "CNY"),
-    fetchRates("USD", "CNY"),
-    fetchRates("GBP", "EUR"),
-    fetchRates("GBP", "USD"),
-    fetchRates("EUR", "USD"),
-    fetchRates("CNY", "JPY"),
-    fetchRates("CNY", "KRW"),
-    fetchRates("CNY", "TWD"),
-    fetchRates("CNY", "INR"),
-    fetchRates("CNY", "RUB"),
-    fetchRates("CNY", "HKD"),
-  ]);
+  let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd;
+  try {
+    [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd] = await Promise.all([
+      fetchRates("GBP", "CNY"),
+      fetchRates("EUR", "CNY"),
+      fetchRates("USD", "CNY"),
+      fetchRates("GBP", "EUR"),
+      fetchRates("GBP", "USD"),
+      fetchRates("EUR", "USD"),
+      fetchRates("CNY", "JPY"),
+      fetchRates("CNY", "KRW"),
+      fetchRates("CNY", "TWD"),
+      fetchRates("CNY", "INR"),
+      fetchRates("CNY", "RUB"),
+      fetchRates("CNY", "HKD"),
+    ]);
+  } catch (e) {
+    console.error("Failed to load exchange rates:", e);
+    return;
+  }
 
   if (mergedMode) {
     renderMergedChart("chartMergedCNY", [
@@ -712,11 +719,16 @@ function updateChatReady() {
 // ── Chat ──────────────────────────────────────────────────────────────────────
 const chatHistory = [];
 
+function safeParse(text) {
+  const html = typeof marked !== "undefined" ? marked.parse(text) : text;
+  return typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(html) : html;
+}
+
 function appendBubble(role, text) {
   const div = document.createElement("div");
   div.className = `chat-bubble ${role}`;
   if (role.includes("assistant") && typeof marked !== "undefined") {
-    div.innerHTML = marked.parse(text);
+    div.innerHTML = safeParse(text);
   } else {
     div.textContent = text;
   }
@@ -764,10 +776,11 @@ async function sendChat() {
         model:     localStorage.getItem("llm_model"),
       }),
     });
-    const { reply } = await res.json();
+    const json = await res.json();
+    const reply = json.reply || json.detail || t("chatError") + res.status;
     thinking.className = "chat-bubble assistant";
-    thinking.innerHTML = typeof marked !== "undefined" ? marked.parse(reply) : reply;
-    chatHistory.push({ role: "assistant", content: reply });
+    thinking.innerHTML = safeParse(reply);
+    if (json.reply) chatHistory.push({ role: "assistant", content: reply });
   } catch (e) {
     thinking.className = "chat-bubble assistant";
     thinking.textContent = t("chatError") + e.message;

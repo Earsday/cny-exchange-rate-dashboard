@@ -6,7 +6,7 @@ Usage:
     Then open http://localhost:8000
 """
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -70,16 +70,20 @@ def chat(body: Dict[str, Any]):
         "messages": [{"role": "system", "content": system_prompt}] + messages,
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    resp = http_requests.post(f"{base_url}/chat/completions", json=payload, headers=headers, timeout=60)
-    resp.raise_for_status()
-    result = resp.json()
-    reply = result["choices"][0]["message"]["content"]
+    try:
+        resp = http_requests.post(f"{base_url}/chat/completions", json=payload, headers=headers, timeout=60)
+        resp.raise_for_status()
+        result = resp.json()
+        reply = result["choices"][0]["message"]["content"]
+    except http_requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"LiteLLM request failed: {e}")
+    except (KeyError, IndexError) as e:
+        raise HTTPException(status_code=502, detail=f"Unexpected response from LiteLLM: {e}")
     return {"reply": reply}
 
 
 @app.post("/api/models")
 def models(body: Dict[str, Any]):
-    from fastapi import HTTPException
     base_url = body.get("base_url", "http://localhost:6655").rstrip("/")
     api_key  = body.get("api_key", "")
     headers  = {"Authorization": f"Bearer {api_key}"}
