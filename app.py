@@ -54,7 +54,7 @@ def chat(body: Dict[str, Any]):
     data_lines = []
     for d in data:
         dates, rates = d.get("dates", []), d.get("rates", [])
-        rows = ", ".join(f"{dt}:{r:.4f}" for dt, r in zip(dates, rates))
+        rows = ", ".join(f"{dt}:{r:.4f}" for dt, r in zip(dates, rates) if isinstance(r, (int, float)))
         data_lines.append(f"{d['pair']}: {rows}")
 
     system_prompt = (

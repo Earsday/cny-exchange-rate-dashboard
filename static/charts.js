@@ -10,7 +10,7 @@ const I18N = {
     refresh: "Refresh", all: "All", inPast: "In past", since: "Since",
     thisWeek: "This week", thisMonth: "This month", thisYear: "This year",
     lastWeek: "Last week", lastMonth: "Last month", lastYear: "Last year",
-    col1: "1 col", col2: "2 cols", col3: "3 cols",
+    col1: "1 col", col2: "2 cols", col3: "3 cols", col4: "4 cols",
     "7d": "7D", "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y",
     mergedView: "Merged View", separateView: "Separate View",
     keepUpToDate: "Keep up-to-date", export: "Export",
@@ -49,7 +49,7 @@ const I18N = {
     refresh: "刷新", all: "全部", inPast: "过去", since: "自",
     thisWeek: "本周", thisMonth: "本月", thisYear: "今年",
     lastWeek: "上周", lastMonth: "上月", lastYear: "去年",
-    col1: "1列", col2: "2列", col3: "3列",
+    col1: "1列", col2: "2列", col3: "3列", col4: "4列",
     "7d": "7天", "1m": "1个月", "3m": "3个月", "6m": "6个月", "1y": "1年",
     mergedView: "合并视图", separateView: "分离视图",
     keepUpToDate: "保持最新", export: "导出",
@@ -855,7 +855,7 @@ async function sendChat() {
     const reply = json.reply || json.detail || t("chatError") + res.status;
     thinking.className = "chat-bubble assistant";
     thinking.innerHTML = safeParse(reply);
-    if (json.reply) chatHistory.push({ role: "assistant", content: reply });
+    chatHistory.push({ role: "assistant", content: reply });
   } catch (e) {
     thinking.className = "chat-bubble assistant";
     thinking.textContent = t("chatError") + e.message;

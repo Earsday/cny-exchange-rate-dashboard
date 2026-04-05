@@ -12,8 +12,8 @@ A self-hosted web dashboard for tracking CNY-centric exchange rates with interac
 - **Interactive charts** with min/max labels, crosshair tooltips, and drag-and-drop reordering
 - **Two display modes** — Separate (12 individual charts) or Merged (3 grouped multi-line charts)
 - **Flexible time ranges** — rolling windows (7D/1M/3M/6M/1Y), calendar-anchored (this/last week/month/year), or all available data
-- **Column layout picker** — 1, 2, or 3 columns
-- **Export** — individual chart PNGs or a single combined image
+- **Column layout picker** — 1, 2, 3, or 4 columns (4-column layout suits ultrawide monitors)
+- **Export** — individual chart PNGs or a single combined image, both with chart titles included
 - **AI chat sidebar** — ask questions about the displayed data, powered by a self-hosted LiteLLM proxy
 - **Bilingual UI** — English and Simplified Chinese (简体中文)
 - **No build step** — vanilla JS + Chart.js from CDN
