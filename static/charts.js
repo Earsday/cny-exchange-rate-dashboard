@@ -39,6 +39,8 @@ const I18N = {
     updating: "Updating...", upToDate: "Up-to-date!", failed: "Failed",
     chatError: "Error: ", noChartsSelected: "No charts selected — check at least one chart to include data context.",
     loadingData: "Loading...", selectModelFirst: "Please select a model before saving.",
+    noDataYet: "No data yet — run 'Keep up-to-date' to collect rates first.",
+    exportTooLarge: "The combined image is too large to export. Try fewer columns or switch to Merged View.",
   },
   zh: {
     title: "人民币汇率仪表盘",
@@ -75,6 +77,8 @@ const I18N = {
     updating: "更新中...", upToDate: "已是最新！", failed: "失败",
     chatError: "错误：", noChartsSelected: "未选择图表——请至少勾选一个图表以提供数据上下文。",
     loadingData: "加载中...", selectModelFirst: "请先选择模型再保存。",
+    noDataYet: "暂无数据——请点击"保持最新"按钮先采集汇率数据。",
+    exportTooLarge: "合并图片尺寸过大，无法导出。请减少列数或切换至合并视图。",
   }
 };
 
@@ -170,7 +174,7 @@ function setRange(days) {
 async function setAll() {
   const res = await fetch("/api/date-range");
   const { min, max } = await res.json();
-  if (!min || !max) return;
+  if (!min || !max) { alert(t("noDataYet")); return; }
   document.getElementById("fromDate").value = min;
   document.getElementById("toDate").value = max;
   document.querySelectorAll(".quick-ranges button").forEach(b => b.classList.remove("active"));
@@ -448,6 +452,11 @@ function exportCombined() {
   const totalW = pad * 2 + cw * cols + gap * (cols - 1);
   const totalH = pad * 2 + ch * rows + gap * (rows - 1);
 
+  if (totalW > 16384 || totalH > 16384 || totalW * totalH > 268435456) {
+    alert(t("exportTooLarge"));
+    return;
+  }
+
   const out = document.createElement("canvas");
   out.width = totalW;
   out.height = totalH;
@@ -579,7 +588,8 @@ function initSidebarResize() {
   const handle = document.getElementById("sidebarResizeHandle");
   const sidebar = document.getElementById("chatSidebar");
   let startX, startWidth;
-  let widthFraction = null; // null = use default CSS width
+  const stored = parseFloat(localStorage.getItem("sidebarWidthFraction"));
+  let widthFraction = isNaN(stored) ? null : stored;
 
   function applyFraction() {
     if (widthFraction !== null) {
@@ -588,6 +598,8 @@ function initSidebarResize() {
       sidebar.style.width = Math.min(maxW, Math.max(minW, widthFraction * window.innerWidth)) + "px";
     }
   }
+
+  applyFraction(); // restore persisted width on load
 
   window.addEventListener("resize", applyFraction);
 
@@ -615,6 +627,7 @@ function initSidebarResize() {
       handle.classList.remove("dragging");
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
+      if (widthFraction !== null) localStorage.setItem("sidebarWidthFraction", widthFraction);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     }
