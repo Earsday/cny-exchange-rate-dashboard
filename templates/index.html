@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CNY Exchange Rate Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #333; padding: 24px; display: flex; flex-direction: row; gap: 0; }
+    #mainArea { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    h1 { margin-bottom: 24px; font-size: 1.6rem; flex-shrink: 0; }
+    .controls {
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+      background: #fff; padding: 16px; border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+    .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+    .controls select, .controls input {
+      padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;
+    }
+    .controls button {
+      padding: 8px 20px; background: #2563eb; color: #fff; border: none;
+      border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+    }
+    .controls button:hover { background: #1d4ed8; }
+    .quick-ranges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .quick-ranges button {
+      padding: 5px 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+      border-radius: 6px; cursor: pointer; font-size: 0.82rem;
+    }
+    .quick-ranges button:hover { background: #e2e8f0; }
+    .quick-ranges button.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .col-picker { display: flex; gap: 6px; align-items: center; }
+    .col-picker button {
+      padding: 5px 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+      border-radius: 6px; cursor: pointer; font-size: 0.82rem;
+    }
+    .col-picker button:hover { background: #e2e8f0; }
+    .col-picker button.active { background: #475569; color: #fff; border-color: #475569; }
+    .export-menu { position: relative; }
+    #exportDropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;
+      padding: 4px; flex-direction: column; gap: 4px; z-index: 10; min-width: 160px;
+    }
+    #exportDropdown button {
+      background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+      padding: 6px 12px; font-size: 0.85rem; text-align: left;
+    }
+    #exportDropdown button:hover { background: #e2e8f0; }
+    .controls { justify-content: flex-start; }
+    .controls .spacer { flex: 1; }
+    .chart-area { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+    .chart-grid { display: grid; gap: 24px; grid-template-columns: repeat(2, 1fr); }
+    .chart-card {
+      background: #fff; border-radius: 8px; padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1); min-width: 0;
+    }
+    .chart-card h2 { font-size: 1rem; margin-bottom: 16px; color: #555; }
+    .no-data { text-align: center; color: #aaa; padding: 40px 0; }
+    .chart-card { cursor: grab; }
+    .chart-card.dragging { opacity: 0.4; cursor: grabbing; }
+    .chart-card.drag-over { outline: 2px dashed #2563eb; outline-offset: -2px; background: #eff6ff; }
+    @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr !important; } }
+    /* Sidebar */
+    #chatSidebar {
+      width: 340px; flex-shrink: 0; display: none; flex-direction: column;
+      background: #fff; border-left: 1px solid #e2e8f0; margin-left: 16px;
+      border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden;
+      align-self: stretch; position: relative;
+    }
+    #chatSidebar.sidebar-left { border-left: none; border-right: 1px solid #e2e8f0; margin-left: 0; margin-right: 16px; order: -1; }
+    #sidebarResizeHandle {
+      position: absolute; top: 0; width: 5px; height: 100%;
+      cursor: col-resize; z-index: 10; background: transparent;
+    }
+    #sidebarResizeHandle:hover, #sidebarResizeHandle.dragging { background: rgba(37,99,235,0.25); }
+    #chatSidebar:not(.sidebar-left) #sidebarResizeHandle { left: 0; }
+    #chatSidebar.sidebar-left #sidebarResizeHandle { right: 0; left: auto; }
+    .sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: #1e40af; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-header span { font-weight: 600; font-size: 0.95rem; }
+    .sidebar-header button {
+      background: transparent; border: 1px solid rgba(255,255,255,0.4); color: #fff;
+      padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;
+    }
+    .sidebar-header button:hover { background: rgba(255,255,255,0.15); }
+    .sidebar-context {
+      padding: 10px 14px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #f8fafc;
+    }
+    .sidebar-context .ctx-label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px; }
+    #chartCheckboxes { display: flex; flex-wrap: wrap; gap: 4px; }
+    #chartCheckboxes label {
+      display: flex; align-items: center; gap: 4px; font-size: 0.78rem;
+      background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;
+      padding: 2px 7px; cursor: pointer; white-space: nowrap;
+    }
+    #chartCheckboxes label:hover { background: #e2e8f0; }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .chat-bubble {
+      max-width: 88%; padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; line-height: 1.45;
+    }
+    .chat-bubble.user { white-space: pre-wrap; }
+    .chat-bubble.assistant p { margin: 0 0 6px; }
+    .chat-bubble.assistant p:last-child { margin-bottom: 0; }
+    .chat-bubble.assistant ul, .chat-bubble.assistant ol { padding-left: 18px; margin: 0 0 6px; }
+    .chat-bubble.assistant li { margin-bottom: 2px; }
+    .chat-bubble.assistant code { background: #e2e8f0; border-radius: 3px; padding: 1px 4px; font-size: 0.82rem; font-family: monospace; }
+    .chat-bubble.assistant pre { background: #e2e8f0; border-radius: 4px; padding: 8px; overflow-x: auto; margin: 0 0 6px; }
+    .chat-bubble.assistant pre code { background: none; padding: 0; }
+    .chat-bubble.assistant h1, .chat-bubble.assistant h2, .chat-bubble.assistant h3 { margin: 4px 0; font-size: 0.95rem; }
+    .chat-bubble.assistant strong { font-weight: 700; }
+    .chat-bubble.assistant em { font-style: italic; }
+    .chat-bubble.assistant table { border-collapse: collapse; font-size: 0.82rem; margin-bottom: 6px; }
+    .chat-bubble.assistant th, .chat-bubble.assistant td { border: 1px solid #cbd5e1; padding: 3px 8px; }
+    .chat-bubble.assistant th { background: #f1f5f9; }
+    .chat-bubble.user { align-self: flex-end; background: #2563eb; color: #fff; border-bottom-right-radius: 3px; }
+    .chat-bubble.assistant { align-self: flex-start; background: #f1f5f9; color: #334155; border-bottom-left-radius: 3px; }
+    .chat-bubble.thinking { color: #94a3b8; font-style: italic; }
+    .chat-input-area { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #e2e8f0; flex-shrink: 0; }
+    #chatInput {
+      flex: 1; resize: none; border: 1px solid #cbd5e1; border-radius: 6px;
+      padding: 7px 10px; font-size: 0.85rem; font-family: inherit; height: 60px;
+    }
+    #chatInput:disabled { background: #f8fafc; color: #94a3b8; }
+    #chatSendBtn { align-self: flex-end; padding: 8px 16px; }
+    /* Settings modal */
+    #settingsModal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      align-items: center; justify-content: center; z-index: 100;
+    }
+    .settings-card {
+      background: #fff; border-radius: 10px; padding: 24px; width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: flex; flex-direction: column; gap: 14px;
+    }
+    .settings-card h3 { font-size: 1rem; color: #1e293b; }
+    .settings-card label { display: flex; flex-direction: column; gap: 4px; font-size: 0.83rem; font-weight: 600; color: #475569; }
+    .settings-card input { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+    .settings-card .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .settings-card .settings-actions button { padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; border: none; }
+    .btn-save { background: #2563eb; color: #fff; }
+    .btn-cancel { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1 !important; }
+    /* Language toggle */
+    #titleBar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-shrink: 0; }
+    #titleBar h1 { margin-bottom: 0; font-size: 1.6rem; }
+    #langToggle { font-size: 0.85rem; color: #2563eb; cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
+    #langToggle:hover { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div id="mainArea">
+  <div id="titleBar">
+    <h1 data-i18n="title">CNY Exchange Rate Dashboard</h1>
+    <div style="font-size:0.85rem">
+      <button id="langEn" onclick="setLang('en')" style="background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit">English</button>
+      <span style="color:#94a3b8;margin:0 4px">/</span>
+      <button id="langZh" onclick="setLang('zh')" style="background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit">简体中文</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label><span data-i18n="from">From</span>
+      <input type="date" id="fromDate" />
+    </label>
+    <label><span data-i18n="to">To</span>
+      <input type="date" id="toDate" />
+    </label>
+    <button onclick="loadAll()" data-i18n="refresh">Refresh</button>
+    <div class="quick-ranges">
+      <button onclick="setAll()" id="qrAll" data-i18n="all">All</button>
+      <span style="width:1px;background:#e2e8f0;align-self:stretch;margin:0 4px"></span>
+      <span style="font-size:0.8rem;color:#94a3b8;align-self:center" data-i18n="inPast">In past</span>
+      <button onclick="setRange(7)"  id="qr7"   data-i18n="7d">7D</button>
+      <button onclick="setRange(30)" id="qr30"  data-i18n="1m">1M</button>
+      <button onclick="setRange(90)" id="qr90" class="active" data-i18n="3m">3M</button>
+      <button onclick="setRange(180)" id="qr180" data-i18n="6m">6M</button>
+      <button onclick="setRange(365)" id="qr365" data-i18n="1y">1Y</button>
+      <span style="width:1px;background:#e2e8f0;align-self:stretch;margin:0 4px"></span>
+      <span style="font-size:0.8rem;color:#94a3b8;align-self:center" data-i18n="since">Since</span>
+      <button onclick="setSince('week')"      id="qrThisWeek"  data-i18n="thisWeek">This week</button>
+      <button onclick="setSince('month')"     id="qrThisMonth" data-i18n="thisMonth">This month</button>
+      <button onclick="setSince('year')"      id="qrThisYear"  data-i18n="thisYear">This year</button>
+      <button onclick="setSince('lastWeek')"  id="qrLastWeek"  data-i18n="lastWeek">Last week</button>
+      <button onclick="setSince('lastMonth')" id="qrLastMonth" data-i18n="lastMonth">Last month</button>
+      <button onclick="setSince('lastYear')"  id="qrLastYear"  data-i18n="lastYear">Last year</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="col-picker">
+      <button onclick="setCols(1)" id="col1" data-i18n="col1">1 col</button>
+      <button onclick="setCols(2)" id="col2" class="active" data-i18n="col2">2 cols</button>
+      <button onclick="setCols(3)" id="col3" data-i18n="col3">3 cols</button>
+    </div>
+    <button id="toggleMode" onclick="toggleMode()" data-i18n="mergedView">Merged View</button>
+    <span style="width:1px;background:#e2e8f0;align-self:stretch"></span>
+    <button id="updateBtn" onclick="updateData()" style="background:#16a34a" data-i18n="keepUpToDate">Keep up-to-date</button>
+    <div class="export-menu" id="exportMenu">
+      <button onclick="toggleExportMenu()" data-i18n="export">Export</button>
+      <div id="exportDropdown">
+        <button onclick="exportSeparate()" data-i18n="exportSeparate">Separate images</button>
+        <button onclick="exportCombined()" data-i18n="exportCombined">Combined image</button>
+      </div>
+    </div>
+    <button onclick="toggleSidebar()" data-i18n="aiChat">AI Chat</button>
+  </div>
+
+  <div class="chart-area">
+  <div id="separateGrid" class="chart-grid">
+    <div class="chart-card">
+      <h2>GBP -> CNY</h2>
+      <canvas id="chartGBPCNY"></canvas>
+      <div id="noDataGBPCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>EUR -> CNY</h2>
+      <canvas id="chartEURCNY"></canvas>
+      <div id="noDataEURCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>USD -> CNY</h2>
+      <canvas id="chartUSDCNY"></canvas>
+      <div id="noDataUSDCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>GBP -> EUR</h2>
+      <canvas id="chartGBPEUR"></canvas>
+      <div id="noDataGBPEUR" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>GBP -> USD</h2>
+      <canvas id="chartGBPUSD"></canvas>
+      <div id="noDataGBPUSD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>EUR -> USD</h2>
+      <canvas id="chartEURUSD"></canvas>
+      <div id="noDataEURUSD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> JPY</h2>
+      <canvas id="chartCNYJPY"></canvas>
+      <div id="noDataCNYJPY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> KRW</h2>
+      <canvas id="chartCNYKRW"></canvas>
+      <div id="noDataCNYKRW" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> TWD</h2>
+      <canvas id="chartCNYTWD"></canvas>
+      <div id="noDataCNYTWD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> INR</h2>
+      <canvas id="chartCNYINR"></canvas>
+      <div id="noDataCNYINR" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> RUB</h2>
+      <canvas id="chartCNYRUB"></canvas>
+      <div id="noDataCNYRUB" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>CNY -> HKD</h2>
+      <canvas id="chartCNYHKD"></canvas>
+      <div id="noDataCNYHKD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+  </div>
+
+  <div id="mergedGrid" class="chart-grid" style="display:none">
+    <div class="chart-card" id="mergedCNYCard">
+      <h2 data-i18n="mergedCNYTitle">Western (GBP / EUR / USD) -> CNY</h2>
+      <canvas id="chartMergedCNY"></canvas>
+    </div>
+    <div class="chart-card">
+      <h2 data-i18n="mergedCrossTitle">Cross Rates (GBP / EUR / USD)</h2>
+      <canvas id="chartMergedCross"></canvas>
+    </div>
+    <div class="chart-card">
+      <h2 data-i18n="mergedCNYOutTitle">CNY Outbound</h2>
+      <canvas id="chartMergedCNYOut"></canvas>
+    </div>
+  </div>
+  </div>
+
+  </div><!-- /mainArea -->
+
+  <!-- AI Chat Sidebar -->
+  <div id="chatSidebar">
+    <div id="sidebarResizeHandle"></div>
+    <div class="sidebar-header">
+      <span data-i18n="aiAssistant">AI Assistant</span>
+      <div style="display:flex;gap:6px">
+        <button id="moveSidebarBtn" onclick="toggleSidebarSide()" data-i18n="moveToLeft">Move to Left</button>
+        <button onclick="openSettings()" data-i18n="settings">Settings</button>
+        <button onclick="toggleSidebar()">x</button>
+      </div>
+    </div>
+    <div class="sidebar-context">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="ctx-label" style="margin-bottom:0" data-i18n="includeCharts">Include charts:</div>
+        <div style="display:flex;gap:4px">
+          <button onclick="setAllCharts(true)"  style="padding:2px 7px;font-size:0.75rem;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer" data-i18n="selectAll">All</button>
+          <button onclick="setAllCharts(false)" style="padding:2px 7px;font-size:0.75rem;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer" data-i18n="deselectAll">None</button>
+        </div>
+      </div>
+      <div id="chartCheckboxes"></div>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+      <textarea id="chatInput" placeholder="Ask about the data..." disabled></textarea>
+      <button id="chatSendBtn" onclick="sendChat()" disabled data-i18n="send">Send</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal">
+    <div class="settings-card">
+      <h3 data-i18n="aiSettings">AI Assistant Settings</h3>
+      <label><span data-i18n="baseUrl">LiteLLM Base URL</span>
+        <input type="text" id="settingUrl" placeholder="http://localhost:6655/litellm" oninput="updateLoadModelsBtn()" />
+      </label>
+      <label><span data-i18n="apiKey">API Key</span>
+        <input type="password" id="settingKey" placeholder="sk-..." oninput="updateLoadModelsBtn()" />
+      </label>
+      <label><span data-i18n="model">Model</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="settingModel" style="flex:1;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem">
+            <option value="" data-i18n="loadModelsHint">-- load models --</option>
+          </select>
+          <button id="loadModelsBtn" onclick="loadModels()" disabled style="padding:7px 12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;cursor:pointer;white-space:nowrap" data-i18n="load">Load</button>
+        </div>
+      </label>
+      <div class="settings-actions">
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
+        <button class="btn-save" onclick="saveSettings()" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/charts.js?ts={{charts_ts}}"></script>
+</body>
+</html>
