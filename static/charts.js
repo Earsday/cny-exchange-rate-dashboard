@@ -41,6 +41,7 @@ const I18N = {
     loadingData: "Loading...", selectModelFirst: "Please select a model before saving.",
     noDataYet: "No data yet — run 'Keep up-to-date' to collect rates first.",
     exportTooLarge: "The combined image is too large to export. Try fewer columns or switch to Merged View.",
+    resetOrder: "Reset order", resetSize: "Reset size",
   },
   zh: {
     title: "人民币汇率仪表盘",
@@ -77,8 +78,9 @@ const I18N = {
     updating: "更新中...", upToDate: "已是最新！", failed: "失败",
     chatError: "错误：", noChartsSelected: "未选择图表——请至少勾选一个图表以提供数据上下文。",
     loadingData: "加载中...", selectModelFirst: "请先选择模型再保存。",
-    noDataYet: "暂无数据——请点击"保持最新"按钮先采集汇率数据。",
+    noDataYet: '暂无数据——请点击\u201C保持最新\u201D按钮先采集汇率数据。',
     exportTooLarge: "合并图片尺寸过大，无法导出。请减少列数或切换至合并视图。",
+    resetOrder: "重置顺序", resetSize: "重置大小",
   }
 };
 
@@ -429,9 +431,23 @@ function visibleCanvases() {
 
 function exportSeparate() {
   toggleExportMenu();
+  const titleH = 48;
   visibleCanvases().forEach(canvas => {
+    const title = canvas.closest(".chart-card")?.querySelector("h2")?.textContent.trim() || "";
+    const out = document.createElement("canvas");
+    out.width = canvas.width;
+    out.height = canvas.height + titleH;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.font = "bold 24px sans-serif";
+    ctx.fillStyle = "#555";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(title, out.width / 2, titleH / 2);
+    ctx.drawImage(canvas, 0, titleH);
     const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
+    a.href = out.toDataURL("image/png");
     a.download = (canvas.id || "chart") + ".png";
     a.click();
   });
@@ -446,11 +462,12 @@ function exportCombined() {
   const colStr = grid.style.gridTemplateColumns || "1fr 1fr";
   const cols = colStr.trim().split(/\s+/).length;
 
-  const gap = 24, pad = 24;
-  const cw = canvases[0].width, ch = canvases[0].height;
+  const gap = 24, pad = 24, titleH = 48;
+const cw = canvases[0].width, ch = canvases[0].height;
+  const cellH = titleH + ch;
   const rows = Math.ceil(canvases.length / cols);
   const totalW = pad * 2 + cw * cols + gap * (cols - 1);
-  const totalH = pad * 2 + ch * rows + gap * (rows - 1);
+  const totalH = pad * 2 + cellH * rows + gap * (rows - 1);
 
   if (totalW > 16384 || totalH > 16384 || totalW * totalH > 268435456) {
     alert(t("exportTooLarge"));
@@ -464,9 +481,18 @@ function exportCombined() {
   ctx.fillStyle = "#f5f5f5";
   ctx.fillRect(0, 0, totalW, totalH);
 
+  ctx.font = "bold 24px sans-serif";
+  ctx.fillStyle = "#555";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
   canvases.forEach((c, i) => {
     const col = i % cols, row = Math.floor(i / cols);
-    ctx.drawImage(c, pad + col * (cw + gap), pad + row * (ch + gap));
+    const x = pad + col * (cw + gap);
+    const y = pad + row * (cellH + gap);
+    const title = c.closest(".chart-card")?.querySelector("h2")?.textContent.trim() || "";
+    ctx.fillText(title, x + cw / 2, y + titleH / 2);
+    ctx.drawImage(c, x, y + titleH);
   });
 
   const a = document.createElement("a");
@@ -562,6 +588,7 @@ async function loadAll() {
   }
   populateCheckboxes();
   initDragAndDrop();
+  restoreCardOrder();
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -591,15 +618,21 @@ function initSidebarResize() {
   const stored = parseFloat(localStorage.getItem("sidebarWidthFraction"));
   let widthFraction = isNaN(stored) ? null : stored;
 
+  function showResetBtn(visible) {
+    const btn = document.getElementById("resetSizeBtn");
+    if (btn) { btn.style.display = visible ? "" : "none"; if (visible) { btn.setAttribute("data-i18n", "resetSize"); btn.textContent = t("resetSize"); } }
+  }
+
   function applyFraction() {
     if (widthFraction !== null) {
-      const minW = window.innerWidth * 0.13;
+      const minW = window.innerWidth * 0.15;
       const maxW = window.innerWidth * 0.50;
       sidebar.style.width = Math.min(maxW, Math.max(minW, widthFraction * window.innerWidth)) + "px";
     }
   }
 
   applyFraction(); // restore persisted width on load
+  if (widthFraction !== null) showResetBtn(true);
 
   window.addEventListener("resize", applyFraction);
 
@@ -613,14 +646,11 @@ function initSidebarResize() {
     function onMouseMove(e) {
       const isLeft = sidebar.classList.contains("sidebar-left");
       const delta = isLeft ? (e.clientX - startX) : (startX - e.clientX);
-      const minW = window.innerWidth * 0.13;
+      const minW = window.innerWidth * 0.15;
       const maxW = window.innerWidth * 0.50;
       const newW = Math.min(maxW, Math.max(minW, startWidth + delta));
       widthFraction = newW / window.innerWidth;
       sidebar.style.width = newW + "px";
-      requestAnimationFrame(() => {
-        Object.values(charts).forEach(c => c.resize());
-      });
     }
 
     function onMouseUp() {
@@ -628,6 +658,8 @@ function initSidebarResize() {
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
       if (widthFraction !== null) localStorage.setItem("sidebarWidthFraction", widthFraction);
+      showResetBtn(true);
+      requestAnimationFrame(() => { Object.values(charts).forEach(c => c.resize()); });
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     }
@@ -636,6 +668,15 @@ function initSidebarResize() {
     document.addEventListener("mouseup", onMouseUp);
     e.preventDefault();
   });
+}
+
+function resetSidebarSize() {
+  localStorage.removeItem("sidebarWidthFraction");
+  const sidebar = document.getElementById("chatSidebar");
+  sidebar.style.width = "";
+  const btn = document.getElementById("resetSizeBtn");
+  if (btn) btn.style.display = "none";
+  requestAnimationFrame(() => { Object.values(charts).forEach(c => c.resize()); });
 }
 
 function populateCheckboxes() {
@@ -825,6 +866,50 @@ async function sendChat() {
 // ── Drag & drop chart reordering ──────────────────────────────────────────────
 let dragSrc = null;
 
+const DEFAULT_ORDER_SEPARATE = ["chartGBPCNY","chartEURCNY","chartUSDCNY","chartGBPEUR","chartGBPUSD","chartEURUSD","chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD"];
+const DEFAULT_ORDER_MERGED   = ["chartMergedCNY","chartMergedCross","chartMergedCNYOut"];
+
+function saveCardOrder() {
+  const grid = document.getElementById(mergedMode ? "mergedGrid" : "separateGrid");
+  const order = [...grid.querySelectorAll(".chart-card")].map(card => {
+    const canvas = card.querySelector("canvas[id]");
+    return canvas ? canvas.id : null;
+  }).filter(Boolean);
+  localStorage.setItem("chartOrder_" + (mergedMode ? "merged" : "separate"), JSON.stringify(order));
+  const btn = document.getElementById("resetOrderBtn");
+  if (btn) { btn.style.display = ""; btn.setAttribute("data-i18n", "resetOrder"); btn.textContent = t("resetOrder"); }
+}
+
+function restoreCardOrder() {
+  const grid = document.getElementById(mergedMode ? "mergedGrid" : "separateGrid");
+  const key = "chartOrder_" + (mergedMode ? "merged" : "separate");
+  let order;
+  try { order = JSON.parse(localStorage.getItem(key)); } catch { return; }
+  if (!order || !order.length) return;
+  order.forEach(canvasId => {
+    const card = grid.querySelector(`canvas#${canvasId}`)?.closest(".chart-card");
+    if (card) grid.appendChild(card);
+  });
+  const btn = document.getElementById("resetOrderBtn");
+  if (btn) { btn.style.display = ""; btn.setAttribute("data-i18n", "resetOrder"); btn.textContent = t("resetOrder"); }
+}
+
+function resetCardOrder() {
+  localStorage.removeItem("chartOrder_separate");
+  localStorage.removeItem("chartOrder_merged");
+  const btn = document.getElementById("resetOrderBtn");
+  if (btn) btn.style.display = "none";
+  // Physically restore default DOM order for both grids
+  [["separateGrid", DEFAULT_ORDER_SEPARATE], ["mergedGrid", DEFAULT_ORDER_MERGED]].forEach(([gridId, order]) => {
+    const grid = document.getElementById(gridId);
+    order.forEach(canvasId => {
+      const card = grid.querySelector(`canvas#${canvasId}`)?.closest(".chart-card");
+      if (card) grid.appendChild(card);
+    });
+  });
+  loadAll();
+}
+
 function initDragAndDrop() {
   document.querySelectorAll(".chart-card").forEach(card => {
     // Collect live canvases (with Chart.js instances) before cloning
@@ -882,6 +967,7 @@ function initDragAndDrop() {
         parent.insertBefore(card, srcNext);
         parent.insertBefore(dragSrc, tgtNext);
       }
+      saveCardOrder();
     });
   });
 }

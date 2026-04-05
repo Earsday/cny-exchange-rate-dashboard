@@ -200,6 +200,7 @@
       <button onclick="setCols(3)" id="col3" data-i18n="col3">3 cols</button>
     </div>
     <button id="toggleMode" onclick="toggleMode()" data-i18n="mergedView">Merged View</button>
+    <button id="resetOrderBtn" onclick="resetCardOrder()" data-i18n="resetOrder" style="display:none">Reset order</button>
     <span style="width:1px;background:#e2e8f0;align-self:stretch"></span>
     <button id="updateBtn" onclick="updateData()" style="background:#16a34a" data-i18n="keepUpToDate">Keep up-to-date</button>
     <div class="export-menu" id="exportMenu">
@@ -303,6 +304,7 @@
     <div class="sidebar-header">
       <span data-i18n="aiAssistant">AI Assistant</span>
       <div style="display:flex;gap:6px">
+        <button id="resetSizeBtn" onclick="resetSidebarSize()" data-i18n="resetSize" style="display:none">Reset size</button>
         <button id="moveSidebarBtn" onclick="toggleSidebarSide()" data-i18n="moveToLeft">Move to Left</button>
         <button onclick="openSettings()" data-i18n="settings">Settings</button>
         <button onclick="toggleSidebar()">x</button>
