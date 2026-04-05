@@ -5,7 +5,7 @@ DB_PATH = Path(__file__).parent / "rates.db"
 
 
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    return sqlite3.connect(DB_PATH, timeout=10)
 
 
 def init_db():
