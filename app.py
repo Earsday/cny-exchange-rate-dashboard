@@ -6,7 +6,7 @@ Usage:
     Then open http://localhost:8000
 """
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -14,16 +14,81 @@ from db import init_db, get_rates, get_date_range
 from typing import Optional, List, Dict, Any
 import subprocess
 import sys
+import time
+import logging
 from datetime import datetime, timezone
 import requests as http_requests
 
 app = FastAPI(title="Currency Tracker")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+_access_log = logging.getLogger("app.access")
+
+
+_ANSI_RESET  = "\033[0m"
+_ANSI_CYAN   = "\033[36m"   # fast   < 100 ms
+_ANSI_YELLOW = "\033[33m"   # slow   100 ms – 1 s
+_ANSI_RED    = "\033[31m"   # very slow  ≥ 1 s
+
+
+def _fmt_elapsed(seconds: float) -> str:
+    """Format elapsed time with a unit and ANSI colour based on speed tier."""
+    # Choose colour: cyan < 100 ms, yellow < 1 s, red ≥ 1 s
+    if seconds < 0.1:
+        color = _ANSI_CYAN
+    elif seconds < 1.0:
+        color = _ANSI_YELLOW
+    else:
+        color = _ANSI_RED
+
+    us = seconds * 1_000_000
+    if us < 1_000:                          # < 1 ms  → µs
+        text = f"{us:.0f} µs"
+    else:
+        ms = seconds * 1_000
+        if ms < 1_000:                      # < 1 s   → ms
+            text = f"{ms:.3f} ms"
+        elif seconds < 60:                  # < 1 min → s
+            text = f"{seconds:.3f} s"
+        else:                               # ≥ 1 min → min
+            text = f"{seconds / 60:.3f} min"
+
+    return f"{color}{text}{_ANSI_RESET}"
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    path = request.url.path
+    if request.url.query:
+        path += f"?{request.url.query}"
+    _access_log.info(
+        '%s:%s "%s %s HTTP/1.1" %s  %s',
+        request.client.host,
+        request.client.port,
+        request.method,
+        path,
+        response.status_code,
+        _fmt_elapsed(elapsed),
+    )
+    return response
+
 
 @app.on_event("startup")
 def startup():
     init_db()
+    # Suppress uvicorn's built-in access log — our middleware handles it
+    logging.getLogger("uvicorn.access").disabled = True
+    # Log a one-line legend explaining response-time colour tiers
+    _log = logging.getLogger("uvicorn.error")
+    _log.info(
+        "Response time colours: %s< 100ms%s or %s100ms ~ 1s%s or %s≥ 1s%s",
+        _ANSI_CYAN,   _ANSI_RESET,
+        _ANSI_YELLOW, _ANSI_RESET,
+        _ANSI_RED,    _ANSI_RESET,
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -34,9 +99,13 @@ def dashboard():
 
 
 @app.post("/api/collect")
-def collect():
+def collect(body: Dict[str, Any] = {}):
     collect_script = Path(__file__).parent / "collect.py"
-    result = subprocess.run([sys.executable, str(collect_script), "--backfill"], capture_output=True, text=True)
+    cmd = [sys.executable, str(collect_script), "--backfill"]
+    from_date = (body or {}).get("from_date")
+    if from_date:
+        cmd += ["--from-date", from_date]
+    result = subprocess.run(cmd, capture_output=True, text=True)
     return {"ok": result.returncode == 0, "output": result.stdout + result.stderr}
 
 

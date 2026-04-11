@@ -12,6 +12,7 @@ const I18N = {
     lastWeek: "Last week", lastMonth: "Last month", lastYear: "Last year",
     col1: "1 col", col2: "2 cols", col3: "3 cols", col4: "4 cols",
     "7d": "7D", "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y",
+    crossRatesSection: "Western Cross Rates",
     mergedView: "Merged View", separateView: "Separate View",
     keepUpToDate: "Keep up-to-date", export: "Export",
     exportSeparate: "Separate images", exportCombined: "Combined image",
@@ -51,6 +52,7 @@ const I18N = {
     lastWeek: "上周", lastMonth: "上月", lastYear: "去年",
     col1: "1列", col2: "2列", col3: "3列", col4: "4列",
     "7d": "7天", "1m": "1个月", "3m": "3个月", "6m": "6个月", "1y": "1年",
+    crossRatesSection: "西方货币交叉汇率",
     mergedView: "合并视图", separateView: "分离视图",
     keepUpToDate: "保持最新", export: "导出",
     exportSeparate: "分别导出图片", exportCombined: "合并导出图片",
@@ -144,6 +146,7 @@ const CHART_META = {
   chartCNYINR:       { label: "CNY -> INR",      labelZh: "人民币 -> 印度卢比" },
   chartCNYRUB:       { label: "CNY -> RUB",      labelZh: "人民币 -> 卢布" },
   chartCNYHKD:       { label: "CNY -> HKD",      labelZh: "人民币 -> 港币" },
+  chartUSDJPY:       { label: "USD -> JPY",       labelZh: "美元 -> 日元" },
   chartMergedCNY:    { label: "Western (GBP / EUR / USD) -> CNY",  labelZh: "西方货币 (GBP / EUR / USD) -> 人民币" },
   chartMergedCross:  { label: "Cross Rates (GBP / EUR / USD)", labelZh: "交叉汇率 (GBP / EUR / USD)" },
   chartMergedCNYOut: { label: "CNY Outbound",    labelZh: "人民币兑出" },
@@ -407,15 +410,30 @@ async function updateData() {
   const btn = document.getElementById("updateBtn");
   btn.textContent = t("updating");
   btn.disabled = true;
-  const res = await fetch("/api/collect", { method: "POST" });
-  const { ok } = await res.json();
-  btn.textContent = ok ? t("upToDate") : t("failed");
-  btn.style.background = ok ? "#16a34a" : "#dc2626";
-  setTimeout(() => {
-    btn.textContent = t("keepUpToDate");
-    btn.style.background = "#16a34a";
-    btn.disabled = false;
-  }, 2000);
+  btn.classList.add("btn-updating");
+  btn.style.background = "";
+  btn.style.backgroundImage = "";
+  let ok = false;
+  try {
+    const fromDate = document.getElementById("fromDate").value || null;
+    const res = await fetch("/api/collect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from_date: fromDate }),
+    });
+    ({ ok } = await res.json());
+  } catch (e) {
+    ok = false;
+  } finally {
+    btn.classList.remove("btn-updating");
+    btn.textContent = ok ? t("upToDate") : t("failed");
+    btn.style.background = ok ? "#16a34a" : "#dc2626";
+    setTimeout(() => {
+      btn.textContent = t("keepUpToDate");
+      btn.style.background = "#16a34a";
+      btn.disabled = false;
+    }, 2000);
+  }
   if (ok) loadAll();
 }
 
@@ -529,9 +547,9 @@ function toggleMode() {
 async function loadAll() {
   const refreshBtn = document.getElementById("refreshBtn");
   if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = t("loadingData"); }
-  let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd;
+  let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, usdJpy;
   try {
-    [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd] = await Promise.all([
+    [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, usdJpy] = await Promise.all([
       fetchRates("GBP", "CNY"),
       fetchRates("EUR", "CNY"),
       fetchRates("USD", "CNY"),
@@ -544,6 +562,7 @@ async function loadAll() {
       fetchRates("CNY", "INR"),
       fetchRates("CNY", "RUB"),
       fetchRates("CNY", "HKD"),
+      fetchRates("USD", "JPY"),
     ]);
   } catch (e) {
     console.error("Failed to load exchange rates:", e);
@@ -578,6 +597,7 @@ async function loadAll() {
     renderChart("chartGBPEUR", "noDataGBPEUR", "GBP -> EUR", gbpEur.data, "#7c3aed");
     renderChart("chartGBPUSD", "noDataGBPUSD", "GBP -> USD", gbpUsd.data, "#6d28d9");
     renderChart("chartEURUSD", "noDataEURUSD", "EUR -> USD", eurUsd.data, "#059669");
+    renderChart("chartUSDJPY", "noDataUSDJPY", "USD -> JPY", usdJpy.data, "#d97706");
     renderChart("chartCNYJPY", "noDataCNYJPY", "CNY -> JPY", cnyJpy.data, "#ea580c");
     renderChart("chartCNYKRW", "noDataCNYKRW", "CNY -> KRW", cnyKrw.data, "#dc2626");
     renderChart("chartCNYTWD", "noDataCNYTWD", "CNY -> TWD", cnyTwd.data, "#0891b2");
@@ -865,7 +885,7 @@ async function sendChat() {
 // ── Drag & drop chart reordering ──────────────────────────────────────────────
 let dragSrc = null;
 
-const DEFAULT_ORDER_SEPARATE = ["chartGBPCNY","chartEURCNY","chartUSDCNY","chartGBPEUR","chartGBPUSD","chartEURUSD","chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD"];
+const DEFAULT_ORDER_SEPARATE = ["chartGBPCNY","chartEURCNY","chartUSDCNY","chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD","chartGBPEUR","chartGBPUSD","chartEURUSD","chartUSDJPY"];
 const DEFAULT_ORDER_MERGED   = ["chartMergedCNY","chartMergedCross","chartMergedCNYOut"];
 
 function saveCardOrder() {
@@ -977,7 +997,7 @@ document.addEventListener("keydown", e => {
 });
 
 defaultDates();
-setCols(2);
+setCols(3);
 currentLang = localStorage.getItem("lang") || "en";
 applyLang();
 updateChatReady();

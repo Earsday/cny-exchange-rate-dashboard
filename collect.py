@@ -22,7 +22,7 @@ FALLBACK_URL = "https://{date}.currency-api.pages.dev/v1/currencies/{currency}.j
 PAIRS = {
     "GBP": ["CNY", "EUR", "USD"],
     "EUR": ["CNY", "USD"],
-    "USD": ["CNY"],
+    "USD": ["CNY", "JPY"],
     "CNY": ["JPY", "KRW", "TWD", "INR", "RUB", "HKD"],
 }
 
@@ -84,8 +84,14 @@ def fetch_rates_for_date(fetch_date: str):
                 print(f"  {actual_date}: {base} -> {target} = {rate}")
 
 
-def backfill(days: int = 90):
+def backfill(days: int = 90, from_date: str = None):
     today = date.today()
+    if from_date:
+        try:
+            start = date.fromisoformat(from_date)
+            days = (today - start).days
+        except ValueError:
+            pass
     all_dates = [(today - timedelta(days=i)).isoformat() for i in range(days, -1, -1)]
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -110,13 +116,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Collect currency exchange rates")
     parser.add_argument("--backfill", action="store_true", help="Fetch last 90 days")
     parser.add_argument("--days", type=int, default=90, help="Number of days to backfill")
+    parser.add_argument("--from-date", type=str, default=None, help="Backfill from this date (YYYY-MM-DD), overrides --days")
     parser.add_argument("--workers", type=int, default=MAX_WORKERS, help="Number of parallel threads")
     args = parser.parse_args()
 
     MAX_WORKERS = args.workers
     init_db()
     if args.backfill:
-        backfill(args.days)
+        backfill(args.days, args.from_date)
     else:
         fetch_today()
 
