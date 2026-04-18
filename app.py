@@ -98,6 +98,13 @@ def dashboard():
     return HTMLResponse(content=html.replace("{{charts_ts}}", ts), media_type="text/html; charset=utf-8")
 
 
+@app.get("/v2", response_class=HTMLResponse)
+def dashboard_v2():
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    html = (Path(__file__).parent / "templates" / "index-v2.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html.replace("{{charts_ts}}", ts), media_type="text/html; charset=utf-8")
+
+
 @app.post("/api/collect")
 def collect(body: Dict[str, Any] = {}):
     collect_script = Path(__file__).parent / "collect.py"

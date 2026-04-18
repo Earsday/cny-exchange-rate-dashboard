@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CNY Exchange Rate Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <style>
+    :root {
+      --bg:        #0d0e11;
+      --bg-panel:  #13151a;
+      --bg-card:   #181b22;
+      --bg-input:  #1e2230;
+      --border:    #252a36;
+      --border-hi: #2e3447;
+      --amber:     #f5a623;
+      --amber-dim: #b87516;
+      --amber-glow:#f5a62318;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --text:      #f0f2f8;
+      --text-dim:  #b0b8d0;
+      --text-muted:#6e7a96;
+      --mono:      'Space Mono', 'Courier New', monospace;
+      --sans:      'Syne', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+
+    body {
+      font-family: var(--sans);
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+    }
+
+    /* ── SCANLINE overlay on whole page (subtle) ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.04) 2px,
+        rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* ── MAIN AREA ── */
+    #mainArea {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0; padding: 0;
+    }
+
+    /* ── HEADER ── */
+    #titleBar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      overflow: visible;
+    }
+    /* amber accent bar at top */
+    #titleBar::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--amber), var(--amber-dim), transparent 70%);
+    }
+
+    .title-left {
+      display: flex; align-items: baseline; gap: 14px;
+    }
+    #titleBar h1 {
+      font-family: var(--sans);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .title-badge {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      border: 1px solid var(--border-hi);
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    /* compare link */
+    #compareLink {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 3px;
+      letter-spacing: 0.06em;
+      transition: color 0.15s, border-color 0.15s;
+      margin-right: 16px;
+    }
+    #compareLink:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    /* lang toggle */
+    .lang-toggle {
+      display: flex; gap: 0; font-family: var(--mono); font-size: 0.72rem;
+    }
+    .lang-toggle button {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 4px 10px; cursor: pointer; letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
+    .lang-toggle button:first-child { border-radius: 3px 0 0 3px; border-right: none; }
+    .lang-toggle button:last-child  { border-radius: 0 3px 3px 0; }
+    .lang-toggle button.lang-active {
+      background: var(--amber); color: #000; border-color: var(--amber); font-weight: 700;
+    }
+    .lang-toggle button:not(.lang-active):hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    /* ── CONTROLS BAR ── */
+    .controls {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+      padding: 10px 24px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .ctrl-group {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ctrl-sep {
+      width: 1px; height: 24px; background: var(--border-hi); flex-shrink: 0;
+    }
+    .ctrl-label {
+      font-family: var(--mono); font-size: 0.62rem; color: var(--text-muted);
+      letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+    }
+
+    /* date inputs */
+    .controls input[type="date"] {
+      background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border-hi); border-radius: 3px;
+      padding: 5px 8px; font-size: 0.78rem; font-family: var(--mono);
+      outline: none; width: 130px;
+      color-scheme: dark;
+    }
+    .controls input[type="date"]:focus { border-color: var(--amber); }
+
+    /* generic control button */
+    .ctrl-btn {
+      font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em;
+      padding: 5px 12px; cursor: pointer; border-radius: 3px; transition: all 0.15s;
+      border: 1px solid var(--border-hi); background: var(--bg-input); color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .ctrl-btn:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-glow); }
+    .ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .ctrl-btn.active {
+      background: var(--amber); color: #000; border-color: var(--amber); font-weight: 700;
+    }
+    .ctrl-btn.active:hover { background: #ffb83d; border-color: #ffb83d; color: #000; }
+
+    /* green action button (Keep up-to-date) */
+    .ctrl-btn-green {
+      background: #16301e; color: var(--green); border-color: #1e4a2a;
+    }
+    .ctrl-btn-green:hover { background: #1e4a2a; color: #4ade80; border-color: #22c55e; }
+
+    /* update animation */
+    @keyframes stripe-slide {
+      from { background-position: 0 0; }
+      to   { background-position: 80px 0; }
+    }
+    #updateBtn.btn-updating {
+      background-image: repeating-linear-gradient(
+        45deg,
+        #16a34a 0px, #16a34a 10px,
+        #15803d 10px, #15803d 20px
+      ) !important;
+      background-size: 103% !important;
+      animation: stripe-slide 1s linear infinite;
+      cursor: not-allowed;
+      color: #fff; border-color: transparent;
+    }
+
+    .controls .spacer { flex: 1; }
+
+    /* export dropdown */
+    .export-menu { position: relative; }
+    #exportDropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--bg-card); border: 1px solid var(--border-hi);
+      border-radius: 4px; padding: 4px; flex-direction: column; gap: 4px;
+      z-index: 50; min-width: 170px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    #exportDropdown button {
+      font-family: var(--mono); font-size: 0.75rem;
+      background: transparent; color: var(--text-dim);
+      border: none; padding: 7px 12px; text-align: left; cursor: pointer;
+      border-radius: 3px; letter-spacing: 0.03em;
+      transition: all 0.12s;
+    }
+    #exportDropdown button:hover { background: var(--amber-glow); color: var(--amber); }
+
+    /* ── CHART AREA ── */
+    .chart-area { flex: 1; overflow-y: auto; padding: 20px 24px 24px; }
+
+    /* custom scrollbar */
+    .chart-area::-webkit-scrollbar { width: 6px; }
+    .chart-area::-webkit-scrollbar-track { background: var(--bg); }
+    .chart-area::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+    .chart-area::-webkit-scrollbar-thumb:hover { background: var(--amber-dim); }
+
+    .chart-grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .chart-section-divider {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0 4px;
+    }
+    .chart-section-divider::before {
+      content: '//';
+      font-family: var(--mono); font-size: 0.7rem; color: var(--amber); opacity: 0.8;
+    }
+    .chart-section-divider span {
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .chart-section-divider::after {
+      content: '';
+      flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* chart card */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 16px 12px;
+      min-width: 0;
+      cursor: grab;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+    .chart-card:hover { border-color: var(--border-hi); }
+    /* left amber accent on hover */
+    .chart-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0; width: 2px;
+      background: var(--amber);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.25s ease;
+      border-radius: 4px 0 0 4px;
+    }
+    .chart-card:hover::before { transform: scaleY(1); }
+
+    .chart-card h2 {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .chart-card.dragging { opacity: 0.35; cursor: grabbing; }
+    .chart-card.drag-over {
+      border-color: var(--amber);
+      background: var(--amber-glow);
+    }
+
+    .no-data {
+      text-align: center; color: var(--text-muted);
+      font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em;
+      padding: 32px 0;
+    }
+
+    @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr !important; } }
+
+    /* ── SIDEBAR ── */
+    #chatSidebar {
+      width: 340px; flex-shrink: 0; display: none; flex-direction: column;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      margin-left: 0;
+      align-self: stretch; position: relative; overflow: hidden;
+    }
+    #chatSidebar.sidebar-left {
+      border-left: none; border-right: 1px solid var(--border);
+      margin-left: 0; margin-right: 0; order: -1;
+    }
+
+    #sidebarResizeHandle {
+      position: absolute; top: 0; width: 5px; height: 100%;
+      cursor: col-resize; z-index: 10; background: transparent;
+    }
+    #sidebarResizeHandle:hover,
+    #sidebarResizeHandle.dragging { background: rgba(245,166,35,0.2); }
+    #chatSidebar:not(.sidebar-left) #sidebarResizeHandle { left: 0; }
+    #chatSidebar.sidebar-left #sidebarResizeHandle { right: 0; left: auto; }
+
+    .sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .sidebar-header::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, var(--amber), transparent 60%);
+    }
+    .sidebar-header span {
+      font-family: var(--mono); font-weight: 700; font-size: 0.72rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber);
+    }
+    .sidebar-header button {
+      background: transparent; border: 1px solid var(--border-hi);
+      color: var(--text-muted); padding: 3px 8px; border-radius: 3px;
+      cursor: pointer; font-size: 0.68rem; font-family: var(--mono);
+      letter-spacing: 0.04em; transition: all 0.15s;
+    }
+    .sidebar-header button:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    .sidebar-context {
+      padding: 10px 12px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0; background: var(--bg);
+    }
+    .ctx-label {
+      font-family: var(--mono); font-size: 0.62rem; color: var(--text-muted);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+    }
+    #chartCheckboxes { display: flex; flex-wrap: wrap; gap: 4px; }
+    #chartCheckboxes label {
+      display: flex; align-items: center; gap: 4px; font-size: 0.68rem;
+      font-family: var(--mono);
+      background: var(--bg-input); border: 1px solid var(--border-hi);
+      border-radius: 2px; padding: 2px 7px; cursor: pointer; white-space: nowrap;
+      color: var(--text-dim); transition: all 0.12s;
+    }
+    #chartCheckboxes label:hover { border-color: var(--amber-dim); color: var(--amber); }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 12px; display: flex;
+      flex-direction: column; gap: 8px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+    .chat-bubble {
+      max-width: 90%; padding: 8px 12px; border-radius: 4px;
+      font-size: 0.82rem; line-height: 1.5;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--amber-glow);
+      border: 1px solid var(--amber-dim);
+      color: var(--amber);
+      font-family: var(--mono); font-size: 0.78rem;
+      white-space: pre-wrap;
+    }
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .chat-bubble.assistant p { margin: 0 0 6px; font-family: var(--sans); }
+    .chat-bubble.assistant p:last-child { margin-bottom: 0; }
+    .chat-bubble.assistant ul, .chat-bubble.assistant ol { padding-left: 18px; margin: 0 0 6px; }
+    .chat-bubble.assistant li { margin-bottom: 2px; }
+    .chat-bubble.assistant code {
+      background: var(--bg-input); border-radius: 2px; padding: 1px 5px;
+      font-family: var(--mono); font-size: 0.75rem; color: var(--amber);
+    }
+    .chat-bubble.assistant pre {
+      background: var(--bg-input); border-radius: 3px; padding: 8px;
+      overflow-x: auto; margin: 0 0 6px; border: 1px solid var(--border-hi);
+    }
+    .chat-bubble.assistant pre code { background: none; padding: 0; }
+    .chat-bubble.assistant strong { color: var(--amber); font-weight: 700; }
+    .chat-bubble.assistant em { font-style: italic; color: var(--text-dim); }
+    .chat-bubble.assistant table { border-collapse: collapse; font-size: 0.75rem; font-family: var(--mono); margin-bottom: 6px; width: 100%; }
+    .chat-bubble.assistant th, .chat-bubble.assistant td { border: 1px solid var(--border-hi); padding: 4px 8px; }
+    .chat-bubble.assistant th { background: var(--bg-input); color: var(--amber); }
+    .chat-bubble.thinking { color: var(--text-muted); font-style: italic; font-family: var(--mono); font-size: 0.72rem; }
+
+    .chat-input-area {
+      display: flex; gap: 8px; padding: 10px 12px;
+      border-top: 1px solid var(--border); flex-shrink: 0;
+      background: var(--bg-card);
+    }
+    #chatInput {
+      flex: 1; resize: none;
+      background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border-hi); border-radius: 3px;
+      padding: 7px 10px; font-size: 0.78rem; font-family: var(--mono);
+      height: 60px; outline: none;
+      transition: border-color 0.15s;
+    }
+    #chatInput:focus { border-color: var(--amber); }
+    #chatInput:disabled { opacity: 0.4; }
+    #chatSendBtn { align-self: flex-end; }
+
+    /* ── SETTINGS MODAL ── */
+    #settingsModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      align-items: center; justify-content: center; z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    .settings-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      border-radius: 6px; padding: 24px; width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      display: flex; flex-direction: column; gap: 16px;
+      position: relative;
+    }
+    .settings-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--amber), var(--amber-dim), transparent);
+      border-radius: 6px 6px 0 0;
+    }
+    .settings-card h3 {
+      font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--amber);
+    }
+    .settings-card label {
+      display: flex; flex-direction: column; gap: 5px;
+      font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .settings-card input {
+      background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border-hi); border-radius: 3px;
+      padding: 8px 10px; font-size: 0.85rem; font-family: var(--mono); outline: none;
+      transition: border-color 0.15s;
+    }
+    .settings-card input:focus { border-color: var(--amber); }
+    .settings-card select {
+      background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border-hi); border-radius: 3px;
+      padding: 8px 10px; font-size: 0.85rem; font-family: var(--mono); outline: none;
+      flex: 1;
+    }
+    .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .settings-actions button {
+      padding: 7px 18px; border-radius: 3px; cursor: pointer;
+      font-size: 0.75rem; font-family: var(--mono); letter-spacing: 0.06em;
+    }
+    .btn-save {
+      background: var(--amber); color: #000; border: none; font-weight: 700;
+    }
+    .btn-save:hover { background: #ffb83d; }
+    .btn-cancel {
+      background: transparent; color: var(--text-dim);
+      border: 1px solid var(--border-hi);
+    }
+    .btn-cancel:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    #loadModelsBtn {
+      padding: 8px 12px; background: var(--bg-input); color: var(--text-dim);
+      border: 1px solid var(--border-hi); border-radius: 3px;
+      font-size: 0.75rem; font-family: var(--mono); cursor: pointer; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    #loadModelsBtn:hover:not(:disabled) { color: var(--amber); border-color: var(--amber-dim); }
+    #loadModelsBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── THEME DROPDOWN ── */
+    #themeDropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--bg-card); border: 1px solid var(--border-hi);
+      border-radius: 4px; padding: 4px; flex-direction: column; gap: 2px;
+      z-index: 200; min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .theme-opt {
+      display: flex; align-items: center; gap: 9px;
+      font-family: var(--mono); font-size: 0.75rem;
+      background: transparent; color: var(--text-dim);
+      border: none; padding: 7px 10px; text-align: left; cursor: pointer;
+      border-radius: 3px; letter-spacing: 0.03em; width: 100%;
+      transition: all 0.12s;
+    }
+    .theme-opt:hover { background: var(--amber-glow); color: var(--amber); }
+    .theme-opt.active { color: var(--amber); font-weight: 700; }
+    .theme-opt.active::after { content: ' ✓'; margin-left: auto; font-size: 0.7rem; }
+    .theme-swatch {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      display: inline-block;
+    }
+
+    /* ── ARCTIC THEME ── */
+    body.theme-arctic {
+      --bg:        #f4f6fb;
+      --bg-panel:  #eaecf4;
+      --bg-card:   #ffffff;
+      --bg-input:  #f0f2fa;
+      --border:    #d4d8e8;
+      --border-hi: #bcc3d8;
+      --amber:     #2563eb;
+      --amber-dim: #1d4ed8;
+      --amber-glow:#2563eb14;
+      --green:     #16a34a;
+      --red:       #dc2626;
+      --blue:      #2563eb;
+      --text:      #0f172a;
+      --text-dim:  #334155;
+      --text-muted:#64748b;
+    }
+    body.theme-arctic #titleBar::before {
+      background: linear-gradient(90deg, #2563eb, #93c5fd, transparent 70%);
+    }
+    body.theme-arctic .sidebar-header::after {
+      background: linear-gradient(90deg, #2563eb, transparent 60%);
+    }
+    body.theme-arctic .chart-card::before { background: #2563eb; }
+    body.theme-arctic .chart-section-divider::before { color: #2563eb; }
+    body.theme-arctic { color-scheme: light; }
+    body.theme-arctic .controls input[type="date"] { color-scheme: light; }
+
+    /* ── EMERALD NIGHT THEME ── */
+    body.theme-emerald {
+      --bg:        #060d0a;
+      --bg-panel:  #0a120e;
+      --bg-card:   #0e1912;
+      --bg-input:  #122018;
+      --border:    #1a2e20;
+      --border-hi: #213d29;
+      --amber:     #10b981;
+      --amber-dim: #059669;
+      --amber-glow:#10b98116;
+      --green:     #34d399;
+      --red:       #f87171;
+      --blue:      #60a5fa;
+      --text:      #ecfdf5;
+      --text-dim:  #a7f3d0;
+      --text-muted:#4d7c5f;
+    }
+    body.theme-emerald #titleBar::before {
+      background: linear-gradient(90deg, #10b981, #059669, transparent 70%);
+    }
+    body.theme-emerald .sidebar-header::after {
+      background: linear-gradient(90deg, #10b981, transparent 60%);
+    }
+    body.theme-emerald .chart-card::before { background: #10b981; }
+    body.theme-emerald .chart-section-divider::before { color: #10b981; }
+  </style>
+</head>
+<body>
+  <div id="mainArea">
+
+    <!-- HEADER -->
+    <div id="titleBar">
+      <div class="title-left">
+        <h1 data-i18n="title">CNY Exchange Rate Dashboard</h1>
+        <span class="title-badge">TERMINAL v2</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <a href="/" id="compareLink" data-i18n="classicUi">← Classic UI</a>
+        <div class="export-menu" id="themeMenu">
+          <button class="ctrl-btn" onclick="toggleThemeMenu()" data-i18n="theme" style="padding:4px 10px;font-size:0.72rem">Theme ▾</button>
+          <div id="themeDropdown">
+            <button onclick="setTheme('amber')"   id="themeAmber"   class="theme-opt active"><span class="theme-swatch" style="background:#f5a623"></span><span data-i18n="themeAmber">Amber Terminal</span></button>
+            <button onclick="setTheme('arctic')"  id="themeArctic"  class="theme-opt"><span class="theme-swatch" style="background:#3b82f6"></span><span data-i18n="themeArctic">Arctic</span></button>
+            <button onclick="setTheme('emerald')" id="themeEmerald" class="theme-opt"><span class="theme-swatch" style="background:#10b981"></span><span data-i18n="themeEmerald">Emerald Night</span></button>
+          </div>
+        </div>
+        <div class="lang-toggle">
+          <button id="langEn" onclick="setLang('en')">EN</button>
+          <button id="langZh" onclick="setLang('zh')">简中</button>
+          <button id="langZht" onclick="setLang('zht')">繁中</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <!-- Date range -->
+      <div class="ctrl-group">
+        <span class="ctrl-label" data-i18n="from">From</span>
+        <input type="date" id="fromDate" />
+        <span class="ctrl-label" data-i18n="to">To</span>
+        <input type="date" id="toDate" />
+        <button class="ctrl-btn" id="refreshBtn" onclick="loadAll()" data-i18n="refresh">Refresh</button>
+      </div>
+
+      <div class="ctrl-sep"></div>
+
+      <!-- Quick ranges -->
+      <div class="ctrl-group" style="flex-wrap:wrap">
+        <button class="ctrl-btn" onclick="setAll()" id="qrAll" data-i18n="all">All</button>
+        <span class="ctrl-label" data-i18n="inPast">In past</span>
+        <button class="ctrl-btn" onclick="setRange(7)"   id="qr7"   data-i18n="7d">7D</button>
+        <button class="ctrl-btn" onclick="setRange(30)"  id="qr30"  data-i18n="1m">1M</button>
+        <button class="ctrl-btn active" onclick="setRange(90)"  id="qr90"  data-i18n="3m">3M</button>
+        <button class="ctrl-btn" onclick="setRange(180)" id="qr180" data-i18n="6m">6M</button>
+        <button class="ctrl-btn" onclick="setRange(365)" id="qr365" data-i18n="1y">1Y</button>
+        <span class="ctrl-label" data-i18n="since">Since</span>
+        <button class="ctrl-btn" onclick="setSince('week')"      id="qrThisWeek"  data-i18n="thisWeek">This week</button>
+        <button class="ctrl-btn" onclick="setSince('month')"     id="qrThisMonth" data-i18n="thisMonth">This month</button>
+        <button class="ctrl-btn" onclick="setSince('year')"      id="qrThisYear"  data-i18n="thisYear">This year</button>
+        <button class="ctrl-btn" onclick="setSince('lastWeek')"  id="qrLastWeek"  data-i18n="lastWeek">Last week</button>
+        <button class="ctrl-btn" onclick="setSince('lastMonth')" id="qrLastMonth" data-i18n="lastMonth">Last month</button>
+        <button class="ctrl-btn" onclick="setSince('lastYear')"  id="qrLastYear"  data-i18n="lastYear">Last year</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- Columns -->
+      <div class="ctrl-group">
+        <button class="ctrl-btn" onclick="setCols(1)" id="col1" data-i18n="col1">1</button>
+        <button class="ctrl-btn" onclick="setCols(2)" id="col2" data-i18n="col2">2</button>
+        <button class="ctrl-btn active" onclick="setCols(3)" id="col3" data-i18n="col3">3</button>
+        <button class="ctrl-btn" onclick="setCols(4)" id="col4" data-i18n="col4">4</button>
+      </div>
+
+      <div class="ctrl-sep"></div>
+
+      <button class="ctrl-btn" id="toggleMode" onclick="toggleMode()" data-i18n="mergedView">Merged</button>
+      <button class="ctrl-btn" id="resetOrderBtn" onclick="resetCardOrder()" data-i18n="resetOrder" style="display:none">Reset order</button>
+
+      <div class="ctrl-sep"></div>
+
+      <button class="ctrl-btn ctrl-btn-green" id="updateBtn" onclick="updateData()" data-i18n="keepUpToDate">Update offline data</button>
+
+      <div class="export-menu" id="exportMenu">
+        <button class="ctrl-btn" onclick="toggleExportMenu()" data-i18n="export">Export ▾</button>
+        <div id="exportDropdown">
+          <button onclick="exportSeparate()" data-i18n="exportSeparate">Separate images</button>
+          <button onclick="exportCombined()" data-i18n="exportCombined">Combined image</button>
+        </div>
+      </div>
+
+      <button class="ctrl-btn" onclick="toggleSidebar()" data-i18n="aiChat">AI Chat</button>
+    </div>
+
+    <!-- CHART AREA -->
+    <div class="chart-area">
+      <div id="separateGrid" class="chart-grid">
+
+        <div class="chart-card">
+          <h2>GBP → CNY</h2>
+          <canvas id="chartGBPCNY"></canvas>
+          <div id="noDataGBPCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>EUR → CNY</h2>
+          <canvas id="chartEURCNY"></canvas>
+          <div id="noDataEURCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>USD → CNY</h2>
+          <canvas id="chartUSDCNY"></canvas>
+          <div id="noDataUSDCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → JPY</h2>
+          <canvas id="chartCNYJPY"></canvas>
+          <div id="noDataCNYJPY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → KRW</h2>
+          <canvas id="chartCNYKRW"></canvas>
+          <div id="noDataCNYKRW" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → TWD</h2>
+          <canvas id="chartCNYTWD"></canvas>
+          <div id="noDataCNYTWD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → INR</h2>
+          <canvas id="chartCNYINR"></canvas>
+          <div id="noDataCNYINR" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → RUB</h2>
+          <canvas id="chartCNYRUB"></canvas>
+          <div id="noDataCNYRUB" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → HKD</h2>
+          <canvas id="chartCNYHKD"></canvas>
+          <div id="noDataCNYHKD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>CNY → UAH</h2>
+          <canvas id="chartCNYUAH"></canvas>
+          <div id="noDataCNYUAH" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>ILS → CNY</h2>
+          <canvas id="chartILSCNY"></canvas>
+          <div id="noDataILSCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>USD → TWD</h2>
+          <canvas id="chartUSDTWD"></canvas>
+          <div id="noDataUSDTWD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+
+        <div class="chart-section-divider" id="crossRateDivider">
+          <span data-i18n="crossRatesSection">Western Cross Rates</span>
+        </div>
+
+        <div class="chart-card">
+          <h2>GBP → EUR</h2>
+          <canvas id="chartGBPEUR"></canvas>
+          <div id="noDataGBPEUR" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>GBP → USD</h2>
+          <canvas id="chartGBPUSD"></canvas>
+          <div id="noDataGBPUSD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>EUR → USD</h2>
+          <canvas id="chartEURUSD"></canvas>
+          <div id="noDataEURUSD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>USD → JPY</h2>
+          <canvas id="chartUSDJPY"></canvas>
+          <div id="noDataUSDJPY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+
+        <div class="chart-section-divider" id="cryptoDivider">
+          <span data-i18n="cryptoSection">Crypto</span>
+        </div>
+
+        <div class="chart-card">
+          <h2>BTC → USD</h2>
+          <canvas id="chartBTCUSD"></canvas>
+          <div id="noDataBTCUSD" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>BTC → CNY</h2>
+          <canvas id="chartBTCCNY"></canvas>
+          <div id="noDataBTCCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>BTC → EUR</h2>
+          <canvas id="chartBTCEUR"></canvas>
+          <div id="noDataBTCEUR" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+
+      </div><!-- /separateGrid -->
+
+      <div id="mergedGrid" class="chart-grid" style="display:none">
+        <div class="chart-card" id="mergedCNYCard">
+          <h2 data-i18n="mergedCNYTitle">Western (GBP / EUR / USD) → CNY</h2>
+          <canvas id="chartMergedCNY"></canvas>
+          <div id="noDataMergedCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2 data-i18n="mergedCrossTitle">Cross Rates (GBP / EUR / USD)</h2>
+          <canvas id="chartMergedCross"></canvas>
+          <div id="noDataMergedCross" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2 data-i18n="mergedCNYOutTitle">CNY Outbound</h2>
+          <canvas id="chartMergedCNYOut"></canvas>
+          <div id="noDataMergedCNYOut" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+      </div><!-- /mergedGrid -->
+
+    </div><!-- /chart-area -->
+
+  </div><!-- /mainArea -->
+
+  <!-- AI CHAT SIDEBAR -->
+  <div id="chatSidebar">
+    <div id="sidebarResizeHandle"></div>
+    <div class="sidebar-header">
+      <span data-i18n="aiAssistant">AI Assistant</span>
+      <div style="display:flex;gap:5px">
+        <button id="resetSizeBtn" onclick="resetSidebarSize()" data-i18n="resetSize" style="display:none">Reset size</button>
+        <button id="moveSidebarBtn" onclick="toggleSidebarSide()" data-i18n="moveToLeft">← Move</button>
+        <button onclick="openSettings()" data-i18n="settings">Settings</button>
+        <button onclick="toggleSidebar()">✕</button>
+      </div>
+    </div>
+    <div class="sidebar-context">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="ctx-label" data-i18n="includeCharts">Include charts</div>
+        <div style="display:flex;gap:4px">
+          <button onclick="setAllCharts(true)"  class="ctrl-btn" style="padding:2px 8px;font-size:0.65rem" data-i18n="selectAll">All</button>
+          <button onclick="setAllCharts(false)" class="ctrl-btn" style="padding:2px 8px;font-size:0.65rem" data-i18n="deselectAll">None</button>
+        </div>
+      </div>
+      <div id="chartCheckboxes"></div>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input-area">
+      <textarea id="chatInput" placeholder="Ask about the data..." disabled></textarea>
+      <button class="ctrl-btn" id="chatSendBtn" onclick="sendChat()" disabled data-i18n="send" style="align-self:flex-end">Send</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal">
+    <div class="settings-card">
+      <h3 data-i18n="aiSettings">AI Assistant Settings</h3>
+      <label><span data-i18n="baseUrl">LiteLLM Base URL</span>
+        <input type="text" id="settingUrl" placeholder="http://localhost:6655/litellm" oninput="updateLoadModelsBtn()" />
+      </label>
+      <label><span data-i18n="apiKey">API Key</span>
+        <input type="password" id="settingKey" placeholder="sk-..." oninput="updateLoadModelsBtn()" />
+      </label>
+      <label><span data-i18n="model">Model</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="settingModel" style="flex:1;padding:7px 10px;border:1px solid var(--border-hi);border-radius:3px;font-size:0.85rem;font-family:var(--mono);background:var(--bg-input);color:var(--text);outline:none">
+            <option value="" data-i18n="loadModelsHint">-- load models --</option>
+          </select>
+          <button id="loadModelsBtn" onclick="loadModels()" disabled data-i18n="load">Load</button>
+        </div>
+      </label>
+      <div class="settings-actions">
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
+        <button class="btn-save" onclick="saveSettings()" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/charts-v2.js?ts={{charts_ts}}"></script>
+</body>
+</html>
