@@ -22,8 +22,10 @@ FALLBACK_URL = "https://{date}.currency-api.pages.dev/v1/currencies/{currency}.j
 PAIRS = {
     "GBP": ["CNY", "EUR", "USD"],
     "EUR": ["CNY", "USD"],
-    "USD": ["CNY", "JPY"],
-    "CNY": ["JPY", "KRW", "TWD", "INR", "RUB", "HKD"],
+    "USD": ["CNY", "JPY", "TWD"],
+    "CNY": ["JPY", "KRW", "TWD", "INR", "RUB", "HKD", "UAH"],
+    "ILS": ["CNY"],
+    "BTC": ["USD", "CNY", "EUR"],
 }
 
 # Number of parallel threads

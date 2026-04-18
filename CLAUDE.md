@@ -26,14 +26,14 @@ Three-module Python backend with a vanilla JS frontend:
 - **`db.py`** — SQLite layer (`rates.db`). Single table `exchange_rates(date, base_currency, target_currency, rate)` with a unique constraint on the triplet. Exposes `init_db()`, `insert_rate()`, `get_rates()`, `get_existing_pairs()`, `get_date_range()`.
 - **`launch.py`** — convenience wrapper that starts uvicorn and opens the browser.
 
-Frontend (`templates/index.html` + `static/charts.js`) uses Chart.js from CDN. No build step. No test suite. On load, `charts.js` calls `/api/rates` in parallel for all 12 currency pairs and renders line charts.
+Frontend (`templates/index.html` + `static/charts.js`) uses Chart.js from CDN. No build step. No test suite. On load, `charts.js` calls `/api/rates` in parallel for all 19 currency pairs and renders line charts.
 
 The `dashboard()` route injects a UTC timestamp into the HTML (`{{charts_ts}}` placeholder) so `charts.js` is always loaded fresh (`?ts=2026-...`) without manual version bumping.
 
 ## Display Modes
 
 The dashboard has two display modes toggled by the "Merged View" button:
-- **Separate** (default): 12 individual charts, one per pair
+- **Separate** (default): 19 individual charts, one per pair
 - **Merged**: 3 multi-line charts grouped logically — Western (GBP/EUR/USD)->CNY, Cross Rates (GBP/EUR/USD), CNY Outbound (CNY->6 Asian currencies)
 
 Mode state is held in `mergedMode` (bool) in `charts.js`. `renderChart()` handles single-line charts; `renderMergedChart()` handles multi-dataset charts with legend enabled.
@@ -51,7 +51,7 @@ All date helpers use `toLocalDate()` (local timezone) instead of `toISOString()`
 ## Chart Features
 
 - Custom Chart.js plugin `minMaxPlugin` draws green/red badge labels at the max/min points. Badge positions are clamped within `chart.chartArea` and flip above/below if they would overflow.
-- `CHART_META` map (top of `charts.js`) holds `label` (English) and `labelZh` (Chinese) for all 15 chart IDs (12 separate + 3 merged). `populateCheckboxes()` picks the correct label based on `currentLang` and preserves existing checkbox states on re-render. `applyLang()` calls `populateCheckboxes()` so labels update immediately on language switch.
+- `CHART_META` map (top of `charts.js`) holds `label` (English) and `labelZh` (Chinese) for all 22 chart IDs (19 separate + 3 merged). `populateCheckboxes()` picks the correct label based on `currentLang` and preserves existing checkbox states on re-render. `applyLang()` calls `populateCheckboxes()` so labels update immediately on language switch.
 - Charts support drag-and-drop reordering within the grid — cards swap DOM positions; Chart.js instances remain attached to their canvases so no re-render is needed. `initDragAndDrop()` clones each card to clear stale listeners, restores live canvases, then re-attaches listeners. Uses `dragenter`/`dragleave` with an enter-counter to handle child-element false-leaves. Card order is persisted to `localStorage` (`chartOrder_separate` / `chartOrder_merged`) and restored on load. A **"Reset order"** button appears in the controls bar when a custom order is active.
 - AI chat responses are rendered as markdown via the `marked` library (CDN).
 
@@ -82,10 +82,11 @@ All date helpers use `toLocalDate()` (local timezone) instead of `toISOString()`
 
 ## Currency Pairs
 
-The app tracks CNY-centric pairs:
+The app tracks CNY-centric and other pairs:
 
-- Inbound to CNY: GBP, EUR, USD -> CNY
-- Cross rates: GBP -> EUR, GBP -> USD, EUR -> USD
-- Outbound from CNY: CNY -> JPY, KRW, TWD, INR, RUB, HKD
+- Inbound to CNY: GBP, EUR, USD -> CNY; ILS -> CNY
+- Cross rates: GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD
+- Outbound from CNY: CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH
+- Crypto: BTC -> USD, CNY, EUR
 
 To add a new pair, update the `PAIRS` list in `collect.py` and add a corresponding chart in `templates/index.html` / `static/charts.js`.

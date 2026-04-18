@@ -13,8 +13,9 @@ const I18N = {
     col1: "1 col", col2: "2 cols", col3: "3 cols", col4: "4 cols",
     "7d": "7D", "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y",
     crossRatesSection: "Western Cross Rates",
+    cryptoSection: "Crypto",
     mergedView: "Merged View", separateView: "Separate View",
-    keepUpToDate: "Keep up-to-date", export: "Export",
+    keepUpToDate: "Update offline data", export: "Export",
     exportSeparate: "Separate images", exportCombined: "Combined image",
     aiChat: "AI Chat",
     noData: "No data available",
@@ -40,9 +41,11 @@ const I18N = {
     updating: "Updating...", upToDate: "Up-to-date!", failed: "Failed",
     chatError: "Error: ", noChartsSelected: "No charts selected — check at least one chart to include data context.",
     loadingData: "Loading...", selectModelFirst: "Please select a model before saving.",
-    noDataYet: "No data yet — run 'Keep up-to-date' to collect rates first.",
+    noDataYet: "No data yet — run 'Update offline data' to collect rates first.",
     exportTooLarge: "The combined image is too large to export. Try fewer columns or switch to Merged View.",
     resetOrder: "Reset order", resetSize: "Reset size",
+    terminalUi: "Terminal UI →",
+    theme: "Theme ▾", themeDefault: "Classic Blue", themeMidnight: "Midnight", themeRose: "Rose",
   },
   zh: {
     title: "人民币汇率仪表盘",
@@ -53,8 +56,9 @@ const I18N = {
     col1: "1列", col2: "2列", col3: "3列", col4: "4列",
     "7d": "7天", "1m": "1个月", "3m": "3个月", "6m": "6个月", "1y": "1年",
     crossRatesSection: "西方货币交叉汇率",
+    cryptoSection: "加密货币",
     mergedView: "合并视图", separateView: "分离视图",
-    keepUpToDate: "保持最新", export: "导出",
+    keepUpToDate: "更新离线数据", export: "导出",
     exportSeparate: "分别导出图片", exportCombined: "合并导出图片",
     aiChat: "AI 对话",
     noData: "暂无数据",
@@ -80,9 +84,54 @@ const I18N = {
     updating: "更新中...", upToDate: "已是最新！", failed: "失败",
     chatError: "错误：", noChartsSelected: "未选择图表——请至少勾选一个图表以提供数据上下文。",
     loadingData: "加载中...", selectModelFirst: "请先选择模型再保存。",
-    noDataYet: '暂无数据——请点击\u201C保持最新\u201D按钮先采集汇率数据。',
+    noDataYet: '暂无数据——请点击\u201C更新离线数据\u201D按钮先采集汇率数据。',
     exportTooLarge: "合并图片尺寸过大，无法导出。请减少列数或切换至合并视图。",
     resetOrder: "重置顺序", resetSize: "重置大小",
+    terminalUi: "终端界面 →",
+    theme: "主题 ▾", themeDefault: "经典蓝", themeMidnight: "暗夜", themeRose: "玫瑰",
+  },
+  zht: {
+    title: "人民幣匯率儀表板",
+    from: "開始（月/日/年）", to: "結束（月/日/年）",
+    refresh: "重新整理", all: "全部", inPast: "過去", since: "自",
+    thisWeek: "本週", thisMonth: "本月", thisYear: "今年",
+    lastWeek: "上週", lastMonth: "上月", lastYear: "去年",
+    col1: "1欄", col2: "2欄", col3: "3欄", col4: "4欄",
+    "7d": "7天", "1m": "1個月", "3m": "3個月", "6m": "6個月", "1y": "1年",
+    crossRatesSection: "西方貨幣交叉匯率",
+    cryptoSection: "加密貨幣",
+    mergedView: "合併檢視", separateView: "分離檢視",
+    keepUpToDate: "更新離線資料", export: "匯出",
+    exportSeparate: "分別匯出圖片", exportCombined: "合併匯出圖片",
+    aiChat: "AI 對話",
+    noData: "暫無資料",
+    mergedCNYTitle: "西方貨幣 (GBP / EUR / USD) -> 人民幣",
+    mergedCrossTitle: "交叉匯率 (GBP / EUR / USD)",
+    mergedCNYOutTitle: "人民幣兌出",
+    aiAssistant: "AI 助理",
+    moveToLeft: "移至左側", moveToRight: "移至右側",
+    settings: "設定",
+    includeCharts: "包含圖表：",
+    selectAll: "全選", deselectAll: "取消",
+    send: "傳送",
+    chatPlaceholderReady: "詢問資料相關問題...",
+    chatPlaceholderNotReady: "請先設定 AI（點擊設定）",
+    thinking: "思考中...",
+    aiSettings: "AI 助理設定",
+    baseUrl: "LiteLLM 位址", apiKey: "API 金鑰", model: "模型",
+    loadModelsHint: "-- 載入模型 --", load: "載入", loading: "載入中...",
+    loadModelsAlert: "請先填寫 Base URL 和 API 金鑰。",
+    loadModelsFailed: "載入模型失敗：",
+    selectModelHint: "-- 選擇模型 --",
+    cancel: "取消", save: "儲存",
+    updating: "更新中...", upToDate: "已是最新！", failed: "失敗",
+    chatError: "錯誤：", noChartsSelected: "未選擇圖表——請至少勾選一個圖表以提供資料脈絡。",
+    loadingData: "載入中...", selectModelFirst: "請先選擇模型再儲存。",
+    noDataYet: "暫無資料——請點擊「更新離線資料」按鈕先採集匯率資料。",
+    exportTooLarge: "合併圖片尺寸過大，無法匯出。請減少欄數或切換至合併檢視。",
+    resetOrder: "重置順序", resetSize: "重置大小",
+    terminalUi: "終端介面 →",
+    theme: "主題 ▾", themeDefault: "經典藍", themeMidnight: "暗夜", themeRose: "玫瑰",
   }
 };
 
@@ -95,20 +144,20 @@ function applyLang() {
     el.textContent = t(el.getAttribute("data-i18n"));
   });
   document.title = t("title");
-  document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en-US";
-  // Highlight active language link
-  const enBtn = document.getElementById("langEn");
-  const zhBtn = document.getElementById("langZh");
-  enBtn.style.color = currentLang === "en" ? "#1e40af" : "#2563eb";
-  enBtn.style.fontWeight = currentLang === "en" ? "700" : "400";
-  enBtn.style.textDecoration = currentLang === "en" ? "none" : "underline";
-  enBtn.style.cursor = currentLang === "en" ? "default" : "pointer";
-  enBtn.disabled = currentLang === "en";
-  zhBtn.style.color = currentLang === "zh" ? "#1e40af" : "#2563eb";
-  zhBtn.style.fontWeight = currentLang === "zh" ? "700" : "400";
-  zhBtn.style.textDecoration = currentLang === "zh" ? "none" : "underline";
-  zhBtn.style.cursor = currentLang === "zh" ? "default" : "pointer";
-  zhBtn.disabled = currentLang === "zh";
+  document.documentElement.lang = currentLang === "zh" ? "zh-CN" : currentLang === "zht" ? "zh-TW" : "en-US";
+  // Highlight active language button
+  const enBtn  = document.getElementById("langEn");
+  const zhBtn  = document.getElementById("langZh");
+  const zhtBtn = document.getElementById("langZht");
+  [{ btn: enBtn, code: "en" }, { btn: zhBtn, code: "zh" }, { btn: zhtBtn, code: "zht" }].forEach(({ btn, code }) => {
+    if (!btn) return;
+    const active = currentLang === code;
+    btn.style.color          = active ? "#1e40af" : "#2563eb";
+    btn.style.fontWeight     = active ? "700"     : "400";
+    btn.style.textDecoration = active ? "none"    : "underline";
+    btn.style.cursor         = active ? "default" : "pointer";
+    btn.disabled             = active;
+  });
   // Update dynamic placeholders
   const input = document.getElementById("chatInput");
   const ready = !input.disabled;
@@ -134,22 +183,28 @@ function toggleLang() {
 
 
 const CHART_META = {
-  chartGBPCNY:       { label: "GBP -> CNY",      labelZh: "英镑 -> 人民币" },
-  chartEURCNY:       { label: "EUR -> CNY",      labelZh: "欧元 -> 人民币" },
-  chartUSDCNY:       { label: "USD -> CNY",      labelZh: "美元 -> 人民币" },
-  chartGBPEUR:       { label: "GBP -> EUR",      labelZh: "英镑 -> 欧元" },
-  chartGBPUSD:       { label: "GBP -> USD",      labelZh: "英镑 -> 美元" },
-  chartEURUSD:       { label: "EUR -> USD",      labelZh: "欧元 -> 美元" },
-  chartCNYJPY:       { label: "CNY -> JPY",      labelZh: "人民币 -> 日元" },
-  chartCNYKRW:       { label: "CNY -> KRW",      labelZh: "人民币 -> 韩元" },
-  chartCNYTWD:       { label: "CNY -> TWD",      labelZh: "人民币 -> 新台币" },
-  chartCNYINR:       { label: "CNY -> INR",      labelZh: "人民币 -> 印度卢比" },
-  chartCNYRUB:       { label: "CNY -> RUB",      labelZh: "人民币 -> 卢布" },
-  chartCNYHKD:       { label: "CNY -> HKD",      labelZh: "人民币 -> 港币" },
-  chartUSDJPY:       { label: "USD -> JPY",       labelZh: "美元 -> 日元" },
-  chartMergedCNY:    { label: "Western (GBP / EUR / USD) -> CNY",  labelZh: "西方货币 (GBP / EUR / USD) -> 人民币" },
-  chartMergedCross:  { label: "Cross Rates (GBP / EUR / USD)", labelZh: "交叉汇率 (GBP / EUR / USD)" },
-  chartMergedCNYOut: { label: "CNY Outbound",    labelZh: "人民币兑出" },
+  chartGBPCNY:       { label: "GBP -> CNY",      labelZh: "英镑 -> 人民币",      labelZht: "英鎊 -> 人民幣" },
+  chartEURCNY:       { label: "EUR -> CNY",      labelZh: "欧元 -> 人民币",      labelZht: "歐元 -> 人民幣" },
+  chartUSDCNY:       { label: "USD -> CNY",      labelZh: "美元 -> 人民币",      labelZht: "美元 -> 人民幣" },
+  chartGBPEUR:       { label: "GBP -> EUR",      labelZh: "英镑 -> 欧元",        labelZht: "英鎊 -> 歐元" },
+  chartGBPUSD:       { label: "GBP -> USD",      labelZh: "英镑 -> 美元",        labelZht: "英鎊 -> 美元" },
+  chartEURUSD:       { label: "EUR -> USD",      labelZh: "欧元 -> 美元",        labelZht: "歐元 -> 美元" },
+  chartCNYJPY:       { label: "CNY -> JPY",      labelZh: "人民币 -> 日元",      labelZht: "人民幣 -> 日圓" },
+  chartCNYKRW:       { label: "CNY -> KRW",      labelZh: "人民币 -> 韩元",      labelZht: "人民幣 -> 韓元" },
+  chartCNYTWD:       { label: "CNY -> TWD",      labelZh: "人民币 -> 新台币",    labelZht: "人民幣 -> 新台幣" },
+  chartCNYINR:       { label: "CNY -> INR",      labelZh: "人民币 -> 印度卢比",  labelZht: "人民幣 -> 印度盧比" },
+  chartCNYRUB:       { label: "CNY -> RUB",      labelZh: "人民币 -> 卢布",      labelZht: "人民幣 -> 盧布" },
+  chartCNYHKD:       { label: "CNY -> HKD",      labelZh: "人民币 -> 港币",      labelZht: "人民幣 -> 港幣" },
+  chartCNYUAH:       { label: "CNY -> UAH",      labelZh: "人民币 -> 乌克兰格里夫纳", labelZht: "人民幣 -> 烏克蘭格里夫納" },
+  chartILSCNY:       { label: "ILS -> CNY",      labelZh: "以色列新谢克尔 -> 人民币", labelZht: "以色列新謝克爾 -> 人民幣" },
+  chartUSDJPY:       { label: "USD -> JPY",      labelZh: "美元 -> 日元",        labelZht: "美元 -> 日圓" },
+  chartUSDTWD:       { label: "USD -> TWD",      labelZh: "美元 -> 新台币",      labelZht: "美元 -> 新台幣" },
+  chartBTCUSD:       { label: "BTC -> USD",      labelZh: "比特币 -> 美元",      labelZht: "比特幣 -> 美元" },
+  chartBTCCNY:       { label: "BTC -> CNY",      labelZh: "比特币 -> 人民币",    labelZht: "比特幣 -> 人民幣" },
+  chartBTCEUR:       { label: "BTC -> EUR",      labelZh: "比特币 -> 欧元",      labelZht: "比特幣 -> 歐元" },
+  chartMergedCNY:    { label: "Western (GBP / EUR / USD) -> CNY",  labelZh: "西方货币 (GBP / EUR / USD) -> 人民币", labelZht: "西方貨幣 (GBP / EUR / USD) -> 人民幣" },
+  chartMergedCross:  { label: "Cross Rates (GBP / EUR / USD)",     labelZh: "交叉汇率 (GBP / EUR / USD)",          labelZht: "交叉匯率 (GBP / EUR / USD)" },
+  chartMergedCNYOut: { label: "CNY Outbound",    labelZh: "人民币兑出",          labelZht: "人民幣兌出" },
 };
 
 function toLocalDate(d) {
@@ -547,9 +602,9 @@ function toggleMode() {
 async function loadAll() {
   const refreshBtn = document.getElementById("refreshBtn");
   if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = t("loadingData"); }
-  let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, usdJpy;
+  let gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, cnyUah, ilsCny, usdJpy, usdTwd, btcUsd, btcCny, btcEur;
   try {
-    [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, usdJpy] = await Promise.all([
+    [gbpCny, eurCny, usdCny, gbpEur, gbpUsd, eurUsd, cnyJpy, cnyKrw, cnyTwd, cnyInr, cnyRub, cnyHkd, cnyUah, ilsCny, usdJpy, usdTwd, btcUsd, btcCny, btcEur] = await Promise.all([
       fetchRates("GBP", "CNY"),
       fetchRates("EUR", "CNY"),
       fetchRates("USD", "CNY"),
@@ -562,7 +617,13 @@ async function loadAll() {
       fetchRates("CNY", "INR"),
       fetchRates("CNY", "RUB"),
       fetchRates("CNY", "HKD"),
+      fetchRates("CNY", "UAH"),
+      fetchRates("ILS", "CNY"),
       fetchRates("USD", "JPY"),
+      fetchRates("USD", "TWD"),
+      fetchRates("BTC", "USD"),
+      fetchRates("BTC", "CNY"),
+      fetchRates("BTC", "EUR"),
     ]);
   } catch (e) {
     console.error("Failed to load exchange rates:", e);
@@ -574,35 +635,41 @@ async function loadAll() {
   if (mergedMode) {
     renderMergedChart("chartMergedCNY", [
       { label: "GBP -> CNY", data: gbpCny.data, color: "#9333ea" },
-      { label: "EUR -> CNY", data: eurCny.data, color: "#16a34a" },
+      { label: "EUR -> CNY", data: eurCny.data, color: "#06b6d4" },
       { label: "USD -> CNY", data: usdCny.data, color: "#2563eb" },
     ]);
     renderMergedChart("chartMergedCross", [
       { label: "GBP -> EUR", data: gbpEur.data, color: "#2563eb" },
-      { label: "GBP -> USD", data: gbpUsd.data, color: "#dc2626" },
-      { label: "EUR -> USD", data: eurUsd.data, color: "#059669" },
+      { label: "GBP -> USD", data: gbpUsd.data, color: "#f472b6" },
+      { label: "EUR -> USD", data: eurUsd.data, color: "#a78bfa" },
     ]);
     renderMergedChart("chartMergedCNYOut", [
       { label: "CNY -> JPY", data: cnyJpy.data, color: "#2563eb" },
-      { label: "CNY -> KRW", data: cnyKrw.data, color: "#dc2626" },
-      { label: "CNY -> TWD", data: cnyTwd.data, color: "#16a34a" },
+      { label: "CNY -> KRW", data: cnyKrw.data, color: "#f472b6" },
+      { label: "CNY -> TWD", data: cnyTwd.data, color: "#06b6d4" },
       { label: "CNY -> INR", data: cnyInr.data, color: "#ea580c" },
       { label: "CNY -> RUB", data: cnyRub.data, color: "#9333ea" },
       { label: "CNY -> HKD", data: cnyHkd.data, color: "#0891b2" },
     ]);
   } else {
     renderChart("chartGBPCNY", "noDataGBPCNY", "GBP -> CNY", gbpCny.data, "#9333ea");
-    renderChart("chartEURCNY", "noDataEURCNY", "EUR -> CNY", eurCny.data, "#16a34a");
+    renderChart("chartEURCNY", "noDataEURCNY", "EUR -> CNY", eurCny.data, "#06b6d4");
     renderChart("chartUSDCNY", "noDataUSDCNY", "USD -> CNY", usdCny.data, "#2563eb");
     renderChart("chartGBPEUR", "noDataGBPEUR", "GBP -> EUR", gbpEur.data, "#7c3aed");
-    renderChart("chartGBPUSD", "noDataGBPUSD", "GBP -> USD", gbpUsd.data, "#6d28d9");
-    renderChart("chartEURUSD", "noDataEURUSD", "EUR -> USD", eurUsd.data, "#059669");
+    renderChart("chartGBPUSD", "noDataGBPUSD", "GBP -> USD", gbpUsd.data, "#f472b6");
+    renderChart("chartEURUSD", "noDataEURUSD", "EUR -> USD", eurUsd.data, "#a78bfa");
     renderChart("chartUSDJPY", "noDataUSDJPY", "USD -> JPY", usdJpy.data, "#d97706");
+    renderChart("chartUSDTWD", "noDataUSDTWD", "USD -> TWD", usdTwd.data, "#0891b2");
     renderChart("chartCNYJPY", "noDataCNYJPY", "CNY -> JPY", cnyJpy.data, "#ea580c");
-    renderChart("chartCNYKRW", "noDataCNYKRW", "CNY -> KRW", cnyKrw.data, "#dc2626");
-    renderChart("chartCNYTWD", "noDataCNYTWD", "CNY -> TWD", cnyTwd.data, "#0891b2");
+    renderChart("chartBTCUSD", "noDataBTCUSD", "BTC -> USD", btcUsd.data, "#f59e0b");
+    renderChart("chartBTCCNY", "noDataBTCCNY", "BTC -> CNY", btcCny.data, "#fb923c");
+    renderChart("chartBTCEUR", "noDataBTCEUR", "BTC -> EUR", btcEur.data, "#d97706");
+    renderChart("chartCNYUAH", "noDataCNYUAH", "CNY -> UAH", cnyUah.data, "#8b5cf6");
+    renderChart("chartILSCNY", "noDataILSCNY", "ILS -> CNY", ilsCny.data, "#0369a1");
+    renderChart("chartCNYKRW", "noDataCNYKRW", "CNY -> KRW", cnyKrw.data, "#f472b6");
+    renderChart("chartCNYTWD", "noDataCNYTWD", "CNY -> TWD", cnyTwd.data, "#06b6d4");
     renderChart("chartCNYINR", "noDataCNYINR", "CNY -> INR", cnyInr.data, "#b45309");
-    renderChart("chartCNYRUB", "noDataCNYRUB", "CNY -> RUB", cnyRub.data, "#be185d");
+    renderChart("chartCNYRUB", "noDataCNYRUB", "CNY -> RUB", cnyRub.data, "#e879f9");
     renderChart("chartCNYHKD", "noDataCNYHKD", "CNY -> HKD", cnyHkd.data, "#0d9488");
   }
   populateCheckboxes();
@@ -708,7 +775,7 @@ function populateCheckboxes() {
   const checked = new Set([...box.querySelectorAll("input:checked")].map(i => i.value));
   box.innerHTML = ids.map(id => {
     const meta = CHART_META[id] || {};
-    const label = (currentLang === "zh" && meta.labelZh) ? meta.labelZh : (meta.label || id);
+    const label = currentLang === "zht" && meta.labelZht ? meta.labelZht : currentLang === "zh" && meta.labelZh ? meta.labelZh : (meta.label || id);
     const isChecked = checked.has(id) ? " checked" : "";
     return `<label><input type="checkbox" value="${id}"${isChecked} />${label}</label>`;
   }).join("");
@@ -885,7 +952,7 @@ async function sendChat() {
 // ── Drag & drop chart reordering ──────────────────────────────────────────────
 let dragSrc = null;
 
-const DEFAULT_ORDER_SEPARATE = ["chartGBPCNY","chartEURCNY","chartUSDCNY","chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD","chartGBPEUR","chartGBPUSD","chartEURUSD","chartUSDJPY"];
+const DEFAULT_ORDER_SEPARATE = ["chartGBPCNY","chartEURCNY","chartUSDCNY","chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD","chartCNYUAH","chartILSCNY","chartUSDTWD","chartGBPEUR","chartGBPUSD","chartEURUSD","chartUSDJPY","chartBTCUSD","chartBTCCNY","chartBTCEUR"];
 const DEFAULT_ORDER_MERGED   = ["chartMergedCNY","chartMergedCross","chartMergedCNYOut"];
 
 function saveCardOrder() {
@@ -996,16 +1063,66 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.ctrlKey && document.activeElement.id === "chatInput") sendChat();
 });
 
+// ── V1 Theme ───────────────────────────────────────────────────────────────────
+const V1_CHART_THEMES = {
+  default:  { bg: "#ffffff", grid: "#e5e7eb", tick: "#9ca3af", tooltip: { bg: "#fff", border: "#e5e7eb", text: "#334155", title: "#1e293b" }, legend: "#64748b" },
+  midnight: { bg: "#1a1d27", grid: "#2e3347", tick: "#64748b", tooltip: { bg: "#1a1d27", border: "#2e3347", text: "#e2e8f0", title: "#c7d2fe" }, legend: "#94a3b8" },
+  rose:     { bg: "#ffffff", grid: "#fce7f3", tick: "#f9a8d4", tooltip: { bg: "#fff", border: "#fbcfe8", text: "#4a2030", title: "#db2777" }, legend: "#9d174d" },
+};
+
+function applyV1ChartTheme(name) {
+  const T = V1_CHART_THEMES[name] || V1_CHART_THEMES.default;
+  Chart.defaults.color       = T.tick;
+  Chart.defaults.borderColor = T.grid;
+  chartOptions.scales.x.grid  = { color: T.grid };
+  chartOptions.scales.x.ticks = { maxTicksLimit: 8, color: T.tick };
+  chartOptions.scales.y.grid  = { color: T.grid };
+  chartOptions.scales.y.ticks = { callback: v => v.toFixed(2), color: T.tick };
+  chartOptions.plugins.tooltip.backgroundColor = T.tooltip.bg;
+  chartOptions.plugins.tooltip.borderColor     = T.tooltip.border;
+  chartOptions.plugins.tooltip.borderWidth     = 1;
+  chartOptions.plugins.tooltip.bodyColor       = T.tooltip.text;
+  chartOptions.plugins.tooltip.titleColor      = T.tooltip.title;
+}
+
+function setTheme1(name) {
+  document.body.className = document.body.className.replace(/\btheme-\w+\b/g, "").trim();
+  if (name !== "default") document.body.classList.add("theme-" + name);
+  localStorage.setItem("v1theme", name);
+  document.querySelectorAll(".theme-opt1").forEach(b => b.classList.remove("active"));
+  const id = { default: "themeDefault1", midnight: "themeMidnight1", rose: "themeRose1" }[name];
+  const btn = document.getElementById(id);
+  if (btn) btn.classList.add("active");
+  document.getElementById("themeDropdown1").style.display = "none";
+  applyV1ChartTheme(name);
+  Object.values(charts).forEach(c => c.destroy());
+  for (const k of Object.keys(charts)) delete charts[k];
+  loadAll();
+}
+
+function toggleThemeMenu1() {
+  const d = document.getElementById("themeDropdown1");
+  d.style.display = d.style.display === "flex" ? "none" : "flex";
+}
+
 defaultDates();
 setCols(3);
 currentLang = localStorage.getItem("lang") || "en";
 applyLang();
 updateChatReady();
 initSidebarResize();
+// Restore v1 theme before first render
+const _v1theme = localStorage.getItem("v1theme") || "default";
+applyV1ChartTheme(_v1theme);
+if (_v1theme !== "default") document.body.classList.add("theme-" + _v1theme);
+const _v1themeId = { default: "themeDefault1", midnight: "themeMidnight1", rose: "themeRose1" }[_v1theme];
+if (_v1themeId) { document.querySelectorAll(".theme-opt1").forEach(b => b.classList.remove("active")); document.getElementById(_v1themeId).classList.add("active"); }
 document.getElementById("fromDate").addEventListener("change", clearQuickRange);
 document.getElementById("toDate").addEventListener("change", clearQuickRange);
 document.addEventListener("click", e => {
   if (!document.getElementById("exportMenu").contains(e.target))
     document.getElementById("exportDropdown").style.display = "none";
+  if (document.getElementById("themeMenu") && !document.getElementById("themeMenu").contains(e.target))
+    document.getElementById("themeDropdown1").style.display = "none";
 });
 loadAll();

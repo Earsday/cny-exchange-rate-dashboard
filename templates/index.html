@@ -8,27 +8,108 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
   <style>
+    :root {
+      --bg:          #f5f5f5;
+      --bg-panel:    #ffffff;
+      --bg-input:    #f1f5f9;
+      --bg-hover:    #e2e8f0;
+      --border:      #cbd5e1;
+      --border-hi:   #94a3b8;
+      --accent:      #2563eb;
+      --accent-dark: #1d4ed8;
+      --accent-muted:#475569;
+      --text:        #333333;
+      --text-dim:    #555555;
+      --text-muted:  #64748b;
+      --text-faint:  #94a3b8;
+      --card-shadow: 0 1px 4px rgba(0,0,0,0.10);
+      --divider:     #e2e8f0;
+      --drag-over-bg:#eff6ff;
+      --drag-outline:#2563eb;
+      --sidebar-header-bg: #1e40af;
+      --sidebar-context-bg:#f8fafc;
+      --chat-user-bg:#2563eb;
+      --chat-asst-bg:#f1f5f9;
+      --chat-asst-color:#334155;
+    }
+
+    /* ── MIDNIGHT THEME ── */
+    body.theme-midnight {
+      --bg:          #0f1117;
+      --bg-panel:    #1a1d27;
+      --bg-input:    #252836;
+      --bg-hover:    #2e3347;
+      --border:      #2e3347;
+      --border-hi:   #3d4460;
+      --accent:      #818cf8;
+      --accent-dark: #6366f1;
+      --accent-muted:#64748b;
+      --text:        #e2e8f0;
+      --text-dim:    #cbd5e1;
+      --text-muted:  #94a3b8;
+      --text-faint:  #475569;
+      --card-shadow: 0 1px 8px rgba(0,0,0,0.4);
+      --divider:     #2e3347;
+      --drag-over-bg:#1e2235;
+      --drag-outline:#818cf8;
+      --sidebar-header-bg: #312e81;
+      --sidebar-context-bg:#1a1d27;
+      --chat-user-bg:#4f46e5;
+      --chat-asst-bg:#252836;
+      --chat-asst-color:#e2e8f0;
+      color-scheme: dark;
+    }
+    body.theme-midnight .controls input[type="date"] { color-scheme: dark; }
+    body.theme-midnight .settings-card input { color-scheme: dark; }
+
+    /* ── ROSE THEME ── */
+    body.theme-rose {
+      --bg:          #fff1f2;
+      --bg-panel:    #ffffff;
+      --bg-input:    #fce7f3;
+      --bg-hover:    #fce7f3;
+      --border:      #fbcfe8;
+      --border-hi:   #f9a8d4;
+      --accent:      #db2777;
+      --accent-dark: #be185d;
+      --accent-muted:#9d174d;
+      --text:        #1e1b1b;
+      --text-dim:    #4a2030;
+      --text-muted:  #9d174d;
+      --text-faint:  #f9a8d4;
+      --card-shadow: 0 1px 4px rgba(219,39,119,0.08);
+      --divider:     #fce7f3;
+      --drag-over-bg:#fdf2f8;
+      --drag-outline:#db2777;
+      --sidebar-header-bg: #9d174d;
+      --sidebar-context-bg:#fff1f2;
+      --chat-user-bg:#db2777;
+      --chat-asst-bg:#fce7f3;
+      --chat-asst-color:#4a2030;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
-    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #333; padding: 24px; display: flex; flex-direction: row; gap: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 24px; display: flex; flex-direction: row; gap: 0; }
     #mainArea { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
     h1 { margin-bottom: 24px; font-size: 1.6rem; flex-shrink: 0; }
     .controls {
       display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
-      background: #fff; padding: 16px; border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 24px;
-      flex-shrink: 0;
+      background: var(--bg-panel); padding: 16px; border-radius: 8px;
+      box-shadow: var(--card-shadow); margin-bottom: 24px; flex-shrink: 0;
+      justify-content: flex-start;
     }
-    .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+    .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
     .controls select, .controls input {
-      padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.9rem; background: var(--bg-panel); color: var(--text);
     }
     .controls button {
-      padding: 8px 20px; background: #2563eb; color: #fff; border: none;
+      padding: 8px 20px; background: var(--accent); color: #fff; border: none;
       border-radius: 6px; cursor: pointer; font-size: 0.9rem;
     }
-    .controls button:hover { background: #1d4ed8; }
-    .controls button:disabled:not(.btn-updating) { background: #94a3b8 !important; color: #e2e8f0; cursor: not-allowed; }
+    .controls button:hover { background: var(--accent-dark); }
+    .controls button:disabled:not(.btn-updating) { background: var(--text-faint) !important; color: var(--bg-input); cursor: not-allowed; }
     @keyframes stripe-slide {
       from { background-position: 0 0; }
       to   { background-position: 80px 0; }
@@ -46,55 +127,55 @@
     }
     .quick-ranges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .quick-ranges button {
-      padding: 5px 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
-      border-radius: 6px; cursor: pointer; font-size: 0.82rem;
+      padding: 5px 12px; background: var(--bg-input); color: var(--text-dim);
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.82rem;
     }
-    .quick-ranges button:hover { background: #e2e8f0; }
-    .quick-ranges button.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .quick-ranges button:hover { background: var(--bg-hover); }
+    .quick-ranges button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
     .col-picker { display: flex; gap: 6px; align-items: center; }
     .col-picker button {
-      padding: 5px 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
-      border-radius: 6px; cursor: pointer; font-size: 0.82rem;
+      padding: 5px 12px; background: var(--bg-input); color: var(--text-dim);
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.82rem;
     }
-    .col-picker button:hover { background: #e2e8f0; }
-    .col-picker button.active { background: #475569; color: #fff; border-color: #475569; }
+    .col-picker button:hover { background: var(--bg-hover); }
+    .col-picker button.active { background: var(--accent-muted); color: #fff; border-color: var(--accent-muted); }
     .export-menu { position: relative; }
     #exportDropdown {
       display: none; position: absolute; right: 0; top: calc(100% + 6px);
-      background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;
-      padding: 4px; flex-direction: column; gap: 4px; z-index: 10; min-width: 160px;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px; flex-direction: column; gap: 4px; z-index: 200; min-width: 160px;
+      box-shadow: var(--card-shadow);
     }
     #exportDropdown button {
-      background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+      background: var(--bg-input); color: var(--text-dim); border: 1px solid var(--border);
       padding: 6px 12px; font-size: 0.85rem; text-align: left;
     }
-    #exportDropdown button:hover { background: #e2e8f0; }
-    .controls { justify-content: flex-start; }
+    #exportDropdown button:hover { background: var(--bg-hover); }
     .controls .spacer { flex: 1; }
     .chart-area { flex: 1; overflow-y: auto; padding-bottom: 24px; }
     .chart-grid { display: grid; gap: 24px; grid-template-columns: repeat(2, 1fr); }
     .chart-section-divider {
-      grid-column: 1 / -1; font-size: 0.9rem; font-weight: 600; color: #64748b;
-      padding: 8px 4px 0; border-top: 1px solid #e2e8f0; margin-top: 4px;
+      grid-column: 1 / -1; font-size: 0.9rem; font-weight: 600; color: var(--text-muted);
+      padding: 8px 4px 0; border-top: 1px solid var(--divider); margin-top: 4px;
     }
     .chart-card {
-      background: #fff; border-radius: 8px; padding: 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1); min-width: 0;
+      background: var(--bg-panel); border-radius: 8px; padding: 20px;
+      box-shadow: var(--card-shadow); min-width: 0;
     }
-    .chart-card h2 { font-size: 1rem; margin-bottom: 16px; color: #555; }
-    .no-data { text-align: center; color: #aaa; padding: 40px 0; }
+    .chart-card h2 { font-size: 1rem; margin-bottom: 16px; color: var(--text-dim); }
+    .no-data { text-align: center; color: var(--text-faint); padding: 40px 0; }
     .chart-card { cursor: grab; }
     .chart-card.dragging { opacity: 0.4; cursor: grabbing; }
-    .chart-card.drag-over { outline: 2px dashed #2563eb; outline-offset: -2px; background: #eff6ff; }
+    .chart-card.drag-over { outline: 2px dashed var(--drag-outline); outline-offset: -2px; background: var(--drag-over-bg); }
     @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr !important; } }
     /* Sidebar */
     #chatSidebar {
       width: 340px; flex-shrink: 0; display: none; flex-direction: column;
-      background: #fff; border-left: 1px solid #e2e8f0; margin-left: 16px;
-      border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden;
+      background: var(--bg-panel); border-left: 1px solid var(--divider); margin-left: 16px;
+      border-radius: 8px; box-shadow: var(--card-shadow); overflow: hidden;
       align-self: stretch; position: relative;
     }
-    #chatSidebar.sidebar-left { border-left: none; border-right: 1px solid #e2e8f0; margin-left: 0; margin-right: 16px; order: -1; }
+    #chatSidebar.sidebar-left { border-left: none; border-right: 1px solid var(--divider); margin-left: 0; margin-right: 16px; order: -1; }
     #sidebarResizeHandle {
       position: absolute; top: 0; width: 5px; height: 100%;
       cursor: col-resize; z-index: 10; background: transparent;
@@ -104,7 +185,7 @@
     #chatSidebar.sidebar-left #sidebarResizeHandle { right: 0; left: auto; }
     .sidebar-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; background: #1e40af; color: #fff; flex-shrink: 0;
+      padding: 12px 16px; background: var(--sidebar-header-bg); color: #fff; flex-shrink: 0;
     }
     .sidebar-header span { font-weight: 600; font-size: 0.95rem; }
     .sidebar-header button {
@@ -113,16 +194,17 @@
     }
     .sidebar-header button:hover { background: rgba(255,255,255,0.15); }
     .sidebar-context {
-      padding: 10px 14px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #f8fafc;
+      padding: 10px 14px; border-bottom: 1px solid var(--divider);
+      flex-shrink: 0; background: var(--sidebar-context-bg);
     }
-    .sidebar-context .ctx-label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px; }
+    .sidebar-context .ctx-label { font-size: 0.78rem; color: var(--text-faint); margin-bottom: 6px; }
     #chartCheckboxes { display: flex; flex-wrap: wrap; gap: 4px; }
     #chartCheckboxes label {
       display: flex; align-items: center; gap: 4px; font-size: 0.78rem;
-      background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;
-      padding: 2px 7px; cursor: pointer; white-space: nowrap;
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+      padding: 2px 7px; cursor: pointer; white-space: nowrap; color: var(--text-dim);
     }
-    #chartCheckboxes label:hover { background: #e2e8f0; }
+    #chartCheckboxes label:hover { background: var(--bg-hover); }
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;
     }
@@ -134,24 +216,25 @@
     .chat-bubble.assistant p:last-child { margin-bottom: 0; }
     .chat-bubble.assistant ul, .chat-bubble.assistant ol { padding-left: 18px; margin: 0 0 6px; }
     .chat-bubble.assistant li { margin-bottom: 2px; }
-    .chat-bubble.assistant code { background: #e2e8f0; border-radius: 3px; padding: 1px 4px; font-size: 0.82rem; font-family: monospace; }
-    .chat-bubble.assistant pre { background: #e2e8f0; border-radius: 4px; padding: 8px; overflow-x: auto; margin: 0 0 6px; }
+    .chat-bubble.assistant code { background: var(--bg-input); border-radius: 3px; padding: 1px 4px; font-size: 0.82rem; font-family: monospace; }
+    .chat-bubble.assistant pre { background: var(--bg-input); border-radius: 4px; padding: 8px; overflow-x: auto; margin: 0 0 6px; }
     .chat-bubble.assistant pre code { background: none; padding: 0; }
     .chat-bubble.assistant h1, .chat-bubble.assistant h2, .chat-bubble.assistant h3 { margin: 4px 0; font-size: 0.95rem; }
     .chat-bubble.assistant strong { font-weight: 700; }
     .chat-bubble.assistant em { font-style: italic; }
     .chat-bubble.assistant table { border-collapse: collapse; font-size: 0.82rem; margin-bottom: 6px; }
-    .chat-bubble.assistant th, .chat-bubble.assistant td { border: 1px solid #cbd5e1; padding: 3px 8px; }
-    .chat-bubble.assistant th { background: #f1f5f9; }
-    .chat-bubble.user { align-self: flex-end; background: #2563eb; color: #fff; border-bottom-right-radius: 3px; }
-    .chat-bubble.assistant { align-self: flex-start; background: #f1f5f9; color: #334155; border-bottom-left-radius: 3px; }
-    .chat-bubble.thinking { color: #94a3b8; font-style: italic; }
-    .chat-input-area { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #e2e8f0; flex-shrink: 0; }
+    .chat-bubble.assistant th, .chat-bubble.assistant td { border: 1px solid var(--border); padding: 3px 8px; }
+    .chat-bubble.assistant th { background: var(--bg-input); }
+    .chat-bubble.user { align-self: flex-end; background: var(--chat-user-bg); color: #fff; border-bottom-right-radius: 3px; }
+    .chat-bubble.assistant { align-self: flex-start; background: var(--chat-asst-bg); color: var(--chat-asst-color); border-bottom-left-radius: 3px; }
+    .chat-bubble.thinking { color: var(--text-faint); font-style: italic; }
+    .chat-input-area { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--divider); flex-shrink: 0; }
     #chatInput {
-      flex: 1; resize: none; border: 1px solid #cbd5e1; border-radius: 6px;
+      flex: 1; resize: none; border: 1px solid var(--border); border-radius: 6px;
       padding: 7px 10px; font-size: 0.85rem; font-family: inherit; height: 60px;
+      background: var(--bg-panel); color: var(--text);
     }
-    #chatInput:disabled { background: #f8fafc; color: #94a3b8; }
+    #chatInput:disabled { background: var(--bg-input); color: var(--text-faint); }
     #chatSendBtn { align-self: flex-end; padding: 8px 16px; }
     /* Settings modal */
     #settingsModal {
@@ -159,31 +242,76 @@
       align-items: center; justify-content: center; z-index: 100;
     }
     .settings-card {
-      background: #fff; border-radius: 10px; padding: 24px; width: 360px;
+      background: var(--bg-panel); border-radius: 10px; padding: 24px; width: 360px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: flex; flex-direction: column; gap: 14px;
     }
-    .settings-card h3 { font-size: 1rem; color: #1e293b; }
-    .settings-card label { display: flex; flex-direction: column; gap: 4px; font-size: 0.83rem; font-weight: 600; color: #475569; }
-    .settings-card input { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+    .settings-card h3 { font-size: 1rem; color: var(--text); }
+    .settings-card label { display: flex; flex-direction: column; gap: 4px; font-size: 0.83rem; font-weight: 600; color: var(--text-muted); }
+    .settings-card input {
+      padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.9rem; background: var(--bg-panel); color: var(--text);
+    }
+    .settings-card select {
+      padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.9rem; background: var(--bg-panel); color: var(--text);
+    }
     .settings-card .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
     .settings-card .settings-actions button { padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; border: none; }
-    .btn-save { background: #2563eb; color: #fff; }
-    .btn-cancel { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1 !important; }
+    .btn-save { background: var(--accent); color: #fff; }
+    .btn-cancel { background: var(--bg-input); color: var(--text-dim); border: 1px solid var(--border) !important; }
     /* Language toggle */
-    #titleBar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-shrink: 0; }
+    #titleBar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-shrink: 0; position: relative;
+    }
     #titleBar h1 { margin-bottom: 0; font-size: 1.6rem; }
-    #langToggle { font-size: 0.85rem; color: #2563eb; cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
-    #langToggle:hover { color: #1d4ed8; }
+    #langToggle { font-size: 0.85rem; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
+    #langToggle:hover { color: var(--accent-dark); }
+    /* Theme picker */
+    #themeMenu { position: relative; }
+    #themeDropdown1 {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px; flex-direction: column; gap: 2px; z-index: 200; min-width: 170px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .theme-opt1 {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 0.82rem; background: transparent; color: var(--text-dim);
+      border: none; padding: 7px 10px; text-align: left; cursor: pointer;
+      border-radius: 4px; width: 100%; transition: background 0.12s;
+    }
+    .theme-opt1:hover { background: var(--bg-hover); }
+    .theme-opt1.active { color: var(--accent); font-weight: 700; }
+    .theme-opt1.active::after { content: ' ✓'; margin-left: auto; font-size: 0.75rem; }
+    .theme-swatch1 { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+    #themeToggleBtn {
+      font-size: 0.78rem; color: var(--text-muted); text-decoration: none;
+      border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px;
+      background: none; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+    }
+    #themeToggleBtn:hover { color: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
   <div id="mainArea">
   <div id="titleBar">
     <h1 data-i18n="title">CNY Exchange Rate Dashboard</h1>
-    <div style="font-size:0.85rem">
+    <div style="display:flex;align-items:center;gap:12px;font-size:0.85rem">
+      <a href="/v2" data-i18n="terminalUi" style="font-size:0.78rem;color:#64748b;text-decoration:none;border:1px solid #cbd5e1;padding:4px 10px;border-radius:6px;transition:color 0.15s,border-color 0.15s" onmouseover="this.style.color='#2563eb';this.style.borderColor='#2563eb'" onmouseout="this.style.color='#64748b';this.style.borderColor='#cbd5e1'">Terminal UI →</a>
+      <div id="themeMenu" style="position:relative">
+        <button id="themeToggleBtn" onclick="toggleThemeMenu1()" data-i18n="theme">Theme ▾</button>
+        <div id="themeDropdown1">
+          <button onclick="setTheme1('default')" id="themeDefault1" class="theme-opt1 active"><span class="theme-swatch1" style="background:#2563eb"></span><span data-i18n="themeDefault">Classic Blue</span></button>
+          <button onclick="setTheme1('midnight')" id="themeMidnight1" class="theme-opt1"><span class="theme-swatch1" style="background:#818cf8"></span><span data-i18n="themeMidnight">Midnight</span></button>
+          <button onclick="setTheme1('rose')" id="themeRose1" class="theme-opt1"><span class="theme-swatch1" style="background:#db2777"></span><span data-i18n="themeRose">Rose</span></button>
+        </div>
+      </div>
       <button id="langEn" onclick="setLang('en')" style="background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit">English</button>
       <span style="color:#94a3b8;margin:0 4px">/</span>
       <button id="langZh" onclick="setLang('zh')" style="background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit">简体中文</button>
+      <span style="color:#94a3b8;margin:0 4px">/</span>
+      <button id="langZht" onclick="setLang('zht')" style="background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit">繁體中文</button>
     </div>
   </div>
 
@@ -223,7 +351,7 @@
     <button id="toggleMode" onclick="toggleMode()" data-i18n="mergedView">Merged View</button>
     <button id="resetOrderBtn" onclick="resetCardOrder()" data-i18n="resetOrder" style="display:none">Reset order</button>
     <span style="width:1px;background:#e2e8f0;align-self:stretch"></span>
-    <button id="updateBtn" onclick="updateData()" style="background:#16a34a" data-i18n="keepUpToDate">Keep up-to-date</button>
+    <button id="updateBtn" onclick="updateData()" style="background:#16a34a" data-i18n="keepUpToDate">Update offline data</button>
     <div class="export-menu" id="exportMenu">
       <button onclick="toggleExportMenu()" data-i18n="export">Export</button>
       <div id="exportDropdown">
@@ -281,6 +409,21 @@
       <canvas id="chartCNYHKD"></canvas>
       <div id="noDataCNYHKD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
     </div>
+    <div class="chart-card">
+      <h2>CNY -> UAH</h2>
+      <canvas id="chartCNYUAH"></canvas>
+      <div id="noDataCNYUAH" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>ILS -> CNY</h2>
+      <canvas id="chartILSCNY"></canvas>
+      <div id="noDataILSCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>USD -> TWD</h2>
+      <canvas id="chartUSDTWD"></canvas>
+      <div id="noDataUSDTWD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
     <div class="chart-section-divider" id="crossRateDivider">
       <span data-i18n="crossRatesSection">Western Cross Rates</span>
     </div>
@@ -303,6 +446,24 @@
       <h2>USD -> JPY</h2>
       <canvas id="chartUSDJPY"></canvas>
       <div id="noDataUSDJPY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-section-divider" id="cryptoDivider">
+      <span data-i18n="cryptoSection">Crypto</span>
+    </div>
+    <div class="chart-card">
+      <h2>BTC -> USD</h2>
+      <canvas id="chartBTCUSD"></canvas>
+      <div id="noDataBTCUSD" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>BTC -> CNY</h2>
+      <canvas id="chartBTCCNY"></canvas>
+      <div id="noDataBTCCNY" class="no-data" style="display:none" data-i18n="noData">No data available</div>
+    </div>
+    <div class="chart-card">
+      <h2>BTC -> EUR</h2>
+      <canvas id="chartBTCEUR"></canvas>
+      <div id="noDataBTCEUR" class="no-data" style="display:none" data-i18n="noData">No data available</div>
     </div>
   </div>
 
