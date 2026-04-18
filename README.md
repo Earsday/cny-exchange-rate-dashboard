@@ -1,26 +1,28 @@
 # CNY Exchange Rate Dashboard
 
-**English** | [简体中文](README.zh-CN.md)
+**English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A self-hosted web dashboard for tracking CNY-centric exchange rates with interactive charts, AI-powered analysis, and bilingual (English / 简体中文) support.
+A self-hosted web dashboard for tracking CNY-centric exchange rates with interactive charts, AI-powered analysis, and trilingual (English / 简体中文 / 繁體中文) support.
 
 ## Features
 
-- **12 currency pairs** tracked daily — GBP/EUR/USD to CNY, cross rates, and CNY outbound to JPY/KRW/TWD/INR/RUB/HKD
+- **19 currency pairs** tracked daily — GBP/EUR/USD/ILS to CNY, cross rates (GBP/EUR/USD, USD/JPY, USD/TWD), CNY outbound to JPY/KRW/TWD/INR/RUB/HKD/UAH, and BTC cross pairs
 - **Interactive charts** with min/max labels, crosshair tooltips, and drag-and-drop reordering
-- **Two display modes** — Separate (12 individual charts) or Merged (3 grouped multi-line charts)
+- **Two display modes** — Separate (19 individual charts) or Merged (3 grouped multi-line charts)
 - **Flexible time ranges** — rolling windows (7D/1M/3M/6M/1Y), calendar-anchored (this/last week/month/year), or all available data
-- **Column layout picker** — 1, 2, 3, or 4 columns (4-column layout suits ultrawide monitors)
+- **Column layout picker** — 1, 2, 3, or 4 columns
 - **Export** — individual chart PNGs or a single combined image, both with chart titles included
-- **AI chat sidebar** — ask questions about the displayed data, powered by a self-hosted LiteLLM proxy
-- **Bilingual UI** — English and Simplified Chinese (简体中文)
+- **AI chat sidebar** — ask questions about the displayed data, powered by a self-hosted LiteLLM proxy; resizable and moveable left/right
+- **Theme picker** — multiple visual themes per UI, persisted in `localStorage`
+- **Trilingual UI** — English, Simplified Chinese (简体中文), and Traditional Chinese (繁體中文)
+- **Two UIs** — Classic (`/`) and Terminal (`/v2`), with navigation links between them
 - **No build step** — vanilla JS + Chart.js from CDN
 
 ## Screenshots
 
-**Separate View** — 12 individual charts displayed in a grid, each tracking one currency pair. The AI chat sidebar is open on the right, showing a fluctuation analysis summary with min/max/range table and key findings.
+**Separate View** — 19 individual charts displayed in a grid, each tracking one currency pair. The AI chat sidebar is open on the right, showing a fluctuation analysis summary with min/max/range table and key findings.
 
 ![Separate View](pictures/CNY%20Exchange%20Rate%20Dashboard%20-%20Separate%20View.en-US.png)
 
@@ -52,6 +54,7 @@ Or start the server manually:
 ```bash
 uvicorn app:app --reload
 # Open http://localhost:8000
+# Terminal UI at http://localhost:8000/v2
 ```
 
 ## Data Collection
@@ -83,21 +86,24 @@ Credentials are stored in browser `localStorage` only and are never persisted se
 
 | Group | Pairs |
 |---|---|
-| Inbound to CNY | GBP, EUR, USD -> CNY |
-| Cross rates | GBP -> EUR, GBP -> USD, EUR -> USD |
-| Outbound from CNY | CNY -> JPY, KRW, TWD, INR, RUB, HKD |
+| Inbound to CNY | GBP, EUR, USD, ILS -> CNY |
+| Cross rates | GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD |
+| Outbound from CNY | CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH |
+| Crypto | BTC -> USD, CNY, EUR |
 
-To add a new pair, update `PAIRS` in `collect.py` and add the corresponding chart card in `templates/index.html` and `static/charts.js`.
+To add a new pair, update `PAIRS` in `collect.py` and add the corresponding chart card in `templates/index.html` / `static/charts.js` (Classic UI) and `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI).
 
 ## Project Structure
 
 ```
-app.py           # FastAPI server & API routes
-collect.py       # ETL: fetches and stores daily rates
-db.py            # SQLite layer (rates.db)
-launch.py        # Starts server and opens browser
+app.py                # FastAPI server & API routes
+collect.py            # ETL: fetches and stores daily rates
+db.py                 # SQLite layer (rates.db)
+launch.py             # Starts server and opens browser
 templates/
-  index.html     # Dashboard UI
+  index.html          # Classic UI
+  index-v2.html       # Terminal UI
 static/
-  charts.js      # All chart logic, i18n, AI chat
+  charts.js           # Classic UI: chart logic, i18n, AI chat
+  charts-v2.js        # Terminal UI: chart logic, i18n, AI chat
 ```
