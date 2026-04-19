@@ -456,12 +456,8 @@ function renderChart(canvasId, noDataId, label, data, color) {
 }
 
 function mergedLegendHover(chart, hoveredIndex) {
-  chart.data.datasets.forEach((ds, i) => {
-    ds.borderWidth = i === hoveredIndex ? 3 : 1;
-    ds.borderColor = i === hoveredIndex
-      ? chart.data.datasets[i]._origColor
-      : chart.data.datasets[i]._origColor + "40";
-  });
+  const ds = chart.data.datasets[hoveredIndex];
+  ds.borderWidth = 3;
   chart.update("none");
 }
 
