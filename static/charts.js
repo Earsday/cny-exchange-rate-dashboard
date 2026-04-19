@@ -44,7 +44,7 @@ const I18N = {
     noDataYet: "No data yet — run 'Update offline data' to collect rates first.",
     exportTooLarge: "The combined image is too large to export. Try fewer columns or switch to Merged View.",
     resetOrder: "Reset order", resetSize: "Reset size",
-    terminalUi: "Terminal UI →",
+    terminalUi: "Terminal UI →", fioriUi: "Fiori UI →",
     theme: "Theme ▾", themeDefault: "Classic Blue", themeMidnight: "Midnight", themeRose: "Rose",
   },
   zh: {
@@ -87,7 +87,7 @@ const I18N = {
     noDataYet: '暂无数据——请点击\u201C更新离线数据\u201D按钮先采集汇率数据。',
     exportTooLarge: "合并图片尺寸过大，无法导出。请减少列数或切换至合并视图。",
     resetOrder: "重置顺序", resetSize: "重置大小",
-    terminalUi: "终端界面 →",
+    terminalUi: "终端界面 →", fioriUi: "Fiori 界面 →",
     theme: "主题 ▾", themeDefault: "经典蓝", themeMidnight: "暗夜", themeRose: "玫瑰",
   },
   zht: {
@@ -130,7 +130,7 @@ const I18N = {
     noDataYet: "暫無資料——請點擊「更新離線資料」按鈕先採集匯率資料。",
     exportTooLarge: "合併圖片尺寸過大，無法匯出。請減少欄數或切換至合併檢視。",
     resetOrder: "重置順序", resetSize: "重置大小",
-    terminalUi: "終端介面 →",
+    terminalUi: "終端介面 →", fioriUi: "Fiori 介面 →",
     theme: "主題 ▾", themeDefault: "經典藍", themeMidnight: "暗夜", themeRose: "玫瑰",
   }
 };

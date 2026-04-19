@@ -17,7 +17,7 @@
 - **AI 对话侧边栏** —— 基于自托管 LiteLLM 代理，针对当前显示数据提问分析；支持左右移动和拖拽调整宽度
 - **主题切换** —— 两套 UI 各提供多种视觉主题，偏好持久保存
 - **三语界面** —— English、简体中文、繁体中文自由切换
-- **两套 UI** —— 经典界面（`/`）与终端界面（`/v2`），可相互导航切换
+- **三套 UI** —— 经典界面（`/`）、终端界面（`/v2`）与 Fiori 界面（`/v3`），可相互导航切换
 - **无需构建** —— 原生 JS + CDN 引入的 Chart.js
 
 ## 截图
@@ -55,6 +55,7 @@ python launch.py
 uvicorn app:app --reload
 # 访问 http://localhost:8000
 # 终端界面：http://localhost:8000/v2
+# Fiori 界面：http://localhost:8000/v3
 ```
 
 ## 数据采集
@@ -91,7 +92,7 @@ AI 对话侧边栏需要配合自托管的 [LiteLLM 代理](https://docs.litellm
 | 人民币兑出 | 人民币 -> 日元、韩元、新台币、印度卢比、卢布、港币、乌克兰格里夫纳 |
 | 加密货币 | BTC -> 美元、人民币、欧元 |
 
-如需添加新货币对，请更新 `collect.py` 中的 `PAIRS`，并在 `templates/index.html` / `static/charts.js`（经典界面）和 `templates/index-v2.html` / `static/charts-v2.js`（终端界面）中添加对应的图表卡片。
+如需添加新货币对，请更新 `collect.py` 中的 `PAIRS`，并在 `templates/index.html` / `static/charts.js`（经典界面）、`templates/index-v2.html` / `static/charts-v2.js`（终端界面）和 `templates/index-v3.html`（Fiori 界面）中添加对应的图表卡片。
 
 ## 项目结构
 
@@ -103,6 +104,7 @@ launch.py             # 启动服务并打开浏览器
 templates/
   index.html          # 经典界面 UI
   index-v2.html       # 终端界面 UI
+  index-v3.html       # Fiori 界面 UI（自包含）
 static/
   charts.js           # 经典界面：图表逻辑、国际化、AI 对话
   charts-v2.js        # 终端界面：图表逻辑、国际化、AI 对话

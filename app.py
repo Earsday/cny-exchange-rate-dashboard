@@ -105,6 +105,12 @@ def dashboard_v2():
     return HTMLResponse(content=html.replace("{{charts_ts}}", ts), media_type="text/html; charset=utf-8")
 
 
+@app.get("/v3", response_class=HTMLResponse)
+def dashboard_v3():
+    html = (Path(__file__).parent / "templates" / "index-v3.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html, media_type="text/html; charset=utf-8")
+
+
 @app.post("/api/collect")
 def collect(body: Dict[str, Any] = {}):
     collect_script = Path(__file__).parent / "collect.py"

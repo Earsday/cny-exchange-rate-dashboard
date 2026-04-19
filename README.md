@@ -17,7 +17,7 @@ A self-hosted web dashboard for tracking CNY-centric exchange rates with interac
 - **AI chat sidebar** — ask questions about the displayed data, powered by a self-hosted LiteLLM proxy; resizable and moveable left/right
 - **Theme picker** — multiple visual themes per UI, persisted in `localStorage`
 - **Trilingual UI** — English, Simplified Chinese (简体中文), and Traditional Chinese (繁體中文)
-- **Two UIs** — Classic (`/`) and Terminal (`/v2`), with navigation links between them
+- **Three UIs** — Classic (`/`), Terminal (`/v2`), and Fiori (`/v3`), with navigation links between them
 - **No build step** — vanilla JS + Chart.js from CDN
 
 ## Screenshots
@@ -55,6 +55,7 @@ Or start the server manually:
 uvicorn app:app --reload
 # Open http://localhost:8000
 # Terminal UI at http://localhost:8000/v2
+# Fiori UI at http://localhost:8000/v3
 ```
 
 ## Data Collection
@@ -91,7 +92,7 @@ Credentials are stored in browser `localStorage` only and are never persisted se
 | Outbound from CNY | CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH |
 | Crypto | BTC -> USD, CNY, EUR |
 
-To add a new pair, update `PAIRS` in `collect.py` and add the corresponding chart card in `templates/index.html` / `static/charts.js` (Classic UI) and `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI).
+To add a new pair, update `PAIRS` in `collect.py` and add the corresponding chart card in `templates/index.html` / `static/charts.js` (Classic UI), `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI), and `templates/index-v3.html` (Fiori UI).
 
 ## Project Structure
 
@@ -103,6 +104,7 @@ launch.py             # Starts server and opens browser
 templates/
   index.html          # Classic UI
   index-v2.html       # Terminal UI
+  index-v3.html       # Fiori UI (self-contained)
 static/
   charts.js           # Classic UI: chart logic, i18n, AI chat
   charts-v2.js        # Terminal UI: chart logic, i18n, AI chat

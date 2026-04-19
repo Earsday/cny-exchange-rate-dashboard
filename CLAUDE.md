@@ -21,14 +21,15 @@ python collect.py --workers 4 --days 30   # Custom parallelism / backfill window
 
 Three-module Python backend with a vanilla JS frontend:
 
-- **`app.py`** — FastAPI server. Initializes the DB on startup, serves the Classic UI at `GET /`, the Terminal UI at `GET /v2`, and exchange rate data at `GET /api/rates?base=&target=&from=&to=`. Also exposes `GET /api/date-range` (min/max dates), `POST /api/collect` (runs `collect.py --backfill`), `POST /api/chat` (proxies to LiteLLM), and `POST /api/models` (fetches available chat models from LiteLLM).
+- **`app.py`** — FastAPI server. Initializes the DB on startup, serves the Classic UI at `GET /`, the Terminal UI at `GET /v2`, the Fiori UI at `GET /v3`, and exchange rate data at `GET /api/rates?base=&target=&from=&to=`. Also exposes `GET /api/date-range` (min/max dates), `POST /api/collect` (runs `collect.py --backfill`), `POST /api/chat` (proxies to LiteLLM), and `POST /api/models` (fetches available chat models from LiteLLM).
 - **`collect.py`** — ETL script. Fetches rates from the `cdn.jsdelivr.net/@fawazahmed0/currency-api` free API with retry/fallback logic and ThreadPoolExecutor for parallel requests. Run standalone via CLI.
 - **`db.py`** — SQLite layer (`rates.db`). Single table `exchange_rates(date, base_currency, target_currency, rate)` with a unique constraint on the triplet. Exposes `init_db()`, `insert_rate()`, `get_rates()`, `get_existing_pairs()`, `get_date_range()`.
 - **`launch.py`** — convenience wrapper that starts uvicorn and opens the browser.
 
-Two independent frontends, both using Chart.js from CDN with no build step:
+Three independent frontends, all using Chart.js from CDN with no build step:
 - **Classic UI** (`templates/index.html` + `static/charts.js`) — served at `/`
 - **Terminal UI** (`templates/index-v2.html` + `static/charts-v2.js`) — served at `/v2`
+- **Fiori UI** (`templates/index-v3.html`) — served at `/v3`; self-contained single HTML file; uses SAP Horizon CSS design tokens (loaded via `<link>` from CDN) for SAP Fiori aesthetics; all chart/UI logic in inline vanilla JS (same pattern as V1/V2); themes switched by swapping the CSS `<link>` `href`
 
 On load, each UI calls `/api/rates` in parallel for all 19 currency pairs and renders line charts.
 
@@ -78,6 +79,7 @@ Both UIs support multiple visual themes, selectable from a picker in the title b
 
 - **Classic UI** (`v1theme`): Classic Blue (default), Midnight, Rose. Implemented via CSS custom properties on `:root` with `body.theme-midnight` / `body.theme-rose` overrides. Chart.js colors updated via `applyV1ChartTheme(name)`.
 - **Terminal UI** (`v2theme`): Amber Terminal (default), Arctic, Emerald Night. Same CSS variable approach with `body.theme-arctic` / `body.theme-emerald`. Chart.js colors updated via `applyThemeToCharts(name)`.
+- **Fiori UI** (`v3theme`): SAP Horizon (default), Morning Horizon (dark), High Contrast Black. Theme switching swaps two `<link>` tag `href` values pointing to the corresponding SAP Horizon CSS on the OpenUI5 CDN.
 
 Chart line colours intentionally avoid red and green families (reserved for min/max badge labels from `minMaxPlugin`).
 
@@ -102,4 +104,4 @@ The app tracks CNY-centric and other pairs:
 - Outbound from CNY: CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH
 - Crypto: BTC -> USD, CNY, EUR
 
-To add a new pair, update the `PAIRS` list in `collect.py` and add a corresponding chart in `templates/index.html` / `static/charts.js` (Classic UI) and `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI).
+To add a new pair, update the `PAIRS` list in `collect.py` and add a corresponding chart in `templates/index.html` / `static/charts.js` (Classic UI), `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI), and `templates/index-v3.html` (Fiori UI).

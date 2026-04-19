@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CNY Exchange Rate Dashboard — Fiori UI</title>
+
+  <!-- SAP Fiori Horizon theme CSS tokens only (no full UI5 runtime needed) -->
+  <link id="ui5ThemeLink" rel="stylesheet"
+    href="https://sdk.openui5.org/1.120.17/resources/sap/ui/core/themes/sap_horizon/library.css"/>
+  <link id="ui5ThemeLinkM" rel="stylesheet"
+    href="https://sdk.openui5.org/1.120.17/resources/sap/m/themes/sap_horizon/library.css"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    #appShell { display:flex; flex-direction:column; height:100vh; }
+
+    /* Title bar */
+    #titleBar {
+      background: var(--sapShellBar_Background, #0a1628);
+      color: var(--sapShellBar_TextColor, #fff);
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; height: 44px; flex-shrink: 0;
+      font-family: var(--sapFontFamily, "72","72full",Arial,Helvetica,sans-serif);
+    }
+    #titleBar h1 { font-size: 15px; font-weight: 600; margin: 0; flex: 1; }
+    .navLink {
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      text-decoration: none; border: 1px solid rgba(255,255,255,0.3);
+      padding: 3px 10px; border-radius: 4px; transition: all 0.15s;
+    }
+    .navLink:hover { color: #fff; border-color: #fff; }
+    .langBtn {
+      font-size: 12px; background: none; border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.7); padding: 3px 8px; border-radius: 4px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .langBtn.active, .langBtn:hover { color: #fff; border-color: #fff; background: rgba(255,255,255,0.12); }
+    #themeMenuWrap { position: relative; }
+    #themeToggleBtn {
+      background: none; border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.7); padding: 3px 10px; border-radius: 4px;
+      cursor: pointer; font-size: 12px; transition: all 0.15s;
+    }
+    #themeToggleBtn:hover { color: #fff; border-color: #fff; }
+    #themeDropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--sapBaseColor, #fff); border: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+      border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      z-index: 300; min-width: 160px; flex-direction: column; overflow: hidden;
+    }
+    .themeOpt {
+      padding: 9px 14px; cursor: pointer; font-size: 13px;
+      color: var(--sapTextColor, #333); border: none; background: none;
+      text-align: left; width: 100%; transition: background 0.1s;
+    }
+    .themeOpt:hover { background: var(--sapList_Hover_Background, #f0f0f0); }
+    .themeOpt.active { font-weight: 600; color: var(--sapButton_Emphasized_Background, #0070f2); }
+
+    /* Controls bar */
+    #controlsBar {
+      background: var(--sapPageHeader_Background, #fff);
+      border-bottom: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+      padding: 6px 16px; display: flex; flex-wrap: wrap;
+      align-items: center; gap: 6px; flex-shrink: 0;
+      font-family: var(--sapFontFamily, "72","72full",Arial,Helvetica,sans-serif);
+    }
+    .ctrlSep { width: 1px; height: 20px; background: var(--sapGroup_TitleBorderColor, #d9d9d9); margin: 0 2px; }
+    .ctrlLabel { font-size: 12px; color: var(--sapContent_LabelColor, #6a6d70); }
+    .ctrlBtn {
+      font-size: 12px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+      border: 1px solid var(--sapButton_BorderColor, #0070f2);
+      background: var(--sapButton_Background, #fff);
+      color: var(--sapButton_TextColor, #0070f2);
+      font-family: inherit; transition: all 0.15s;
+    }
+    .ctrlBtn:hover { background: var(--sapButton_Hover_Background, #e8f0fe); }
+    .ctrlBtn.active {
+      background: var(--sapButton_Emphasized_Background, #0070f2);
+      color: var(--sapButton_Emphasized_TextColor, #fff);
+      border-color: var(--sapButton_Emphasized_Background, #0070f2);
+    }
+    .ctrlBtnSuccess {
+      background: var(--sapButton_Accept_Background, #107e3e);
+      color: #fff; border-color: var(--sapButton_Accept_Background, #107e3e);
+    }
+    .ctrlBtnSuccess:hover { filter: brightness(1.1); }
+    .ctrlBtnDanger {
+      background: var(--sapButton_Reject_Background, #bb0000);
+      color: #fff; border-color: #bb0000;
+    }
+    .exportWrap { position: relative; }
+    #exportDropdown {
+      display: none; position: absolute; top: calc(100% + 4px); right: 0;
+      background: var(--sapBaseColor, #fff); border: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+      border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      z-index: 200; min-width: 150px; flex-direction: column; overflow: hidden;
+    }
+    .exportOpt {
+      padding: 9px 14px; cursor: pointer; font-size: 13px;
+      color: var(--sapTextColor, #333); border: none; background: none;
+      text-align: left; width: 100%;
+    }
+    .exportOpt:hover { background: var(--sapList_Hover_Background, #f0f0f0); }
+    #resetOrderBtn { display: none; }
+
+    /* Main content */
+    #mainContent {
+      display: flex; flex: 1; overflow: hidden;
+      font-family: var(--sapFontFamily, "72","72full",Arial,Helvetica,sans-serif);
+    }
+    #chartArea { flex: 1; overflow-y: auto; padding: 16px; min-width: 0; }
+    .chartGrid { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+
+    /* Chart cards — Fiori tile style */
+    .chartCard {
+      background: var(--sapTile_Background, #fff);
+      border: 1px solid var(--sapTile_BorderColor, #d9d9d9);
+      border-radius: 8px;
+      padding: 12px 14px 10px;
+      box-sizing: border-box; min-width: 0;
+      box-shadow: var(--sapContent_Shadow0, 0 0 0 1px rgba(0,0,0,.05),0 2px 4px 0 rgba(0,0,0,.08));
+      transition: box-shadow 0.15s;
+      cursor: grab;
+    }
+    .chartCard:hover {
+      box-shadow: var(--sapContent_Shadow1, 0 0 0 1px rgba(0,0,0,.1),0 4px 8px 0 rgba(0,0,0,.12));
+    }
+    .chartCard.dragging { opacity: 0.4; }
+    .chartCard.dragOver { outline: 2px solid var(--sapButton_Emphasized_Background, #0070f2); }
+    .chartCardHeader { display:flex; align-items:center; margin-bottom:8px; }
+    .chartTitle {
+      font-size: 13px; font-weight: 600;
+      color: var(--sapTile_TitleTextColor, #1d2d3e);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chartCanvasWrap { position: relative; height: 180px; }
+    .chartCanvasWrap canvas { display: block; }
+
+    /* AI Chat sidebar */
+    #chatSidebar {
+      width: 320px; min-width: 240px; flex-shrink: 0;
+      display: none; flex-direction: column;
+      overflow: hidden; align-self: stretch; position: relative;
+      border-left: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+      background: var(--sapGroup_ContentBackground, #f5f6f7);
+    }
+    #chatSidebar.open { display: flex; }
+    #chatSidebar.sidebar-left { border-left: none; border-right: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9); order: -1; }
+    #sidebarResizeHandle {
+      position: absolute; top: 0; width: 5px; height: 100%;
+      cursor: col-resize; z-index: 10; background: transparent;
+    }
+    #sidebarResizeHandle:hover, #sidebarResizeHandle.dragging { background: rgba(0,112,242,0.25); }
+    #chatSidebar:not(.sidebar-left) #sidebarResizeHandle { left: 0; }
+    #chatSidebar.sidebar-left #sidebarResizeHandle { right: 0; left: auto; }
+    .sidebarHeader {
+      background: var(--sapShellBar_Background, #0a1628);
+      color: #fff; padding: 8px 12px;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .sidebarTitle { font-size: 14px; font-weight: 600; flex: 1; }
+    .sidebarBtn {
+      background: none; border: 1px solid rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.85); padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; cursor: pointer;
+    }
+    .sidebarBtn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    #chatMessages {
+      flex: 1; min-height: 0; overflow-y: auto; padding: 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .chatBubble {
+      padding: 8px 12px; border-radius: 8px;
+      font-size: 13px; line-height: 1.5; max-width: 92%; word-break: break-word;
+    }
+    .chatBubble.user {
+      background: var(--sapButton_Emphasized_Background, #0070f2);
+      color: #fff; align-self: flex-end;
+    }
+    .chatBubble.assistant {
+      background: var(--sapBaseColor, #fff);
+      border: 1px solid var(--sapGroup_TitleBorderColor, #d9d9d9);
+      align-self: flex-start;
+    }
+    .chatBubble.thinking { opacity: 0.6; font-style: italic; background: var(--sapBaseColor,#fff); border: 1px solid var(--sapGroup_TitleBorderColor,#d9d9d9); align-self: flex-start; }
+    .chatBubble p { margin: 0 0 4px; } .chatBubble p:last-child { margin:0; }
+    .chatBubble pre { background: rgba(0,0,0,0.06); padding: 8px; border-radius:4px; overflow-x:auto; }
+    .chatBubble code { font-size: 11px; }
+    #chatCheckSection {
+      padding: 6px 10px; border-top: 1px solid var(--sapGroup_TitleBorderColor,#d9d9d9); flex-shrink:0;
+    }
+    .checkSectionLabel { font-size: 12px; color: var(--sapContent_LabelColor,#6a6d70); }
+    .checkToggleBtn {
+      font-size: 11px; padding: 1px 6px; margin-left:4px;
+      border: 1px solid var(--sapButton_BorderColor,#0070f2); background:none;
+      color: var(--sapButton_TextColor,#0070f2); border-radius:3px; cursor:pointer;
+    }
+    #chartCheckboxList {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+    }
+    .checkLabel {
+      display: flex; align-items: center; gap:4px; font-size:11px;
+      background: var(--sapBaseColor,#fff); border:1px solid var(--sapGroup_TitleBorderColor,#d9d9d9);
+      border-radius:4px; padding:2px 6px; cursor:pointer; white-space:nowrap;
+    }
+    #chatInputArea {
+      padding: 8px; border-top: 1px solid var(--sapGroup_TitleBorderColor,#d9d9d9);
+      display: flex; gap:6px; flex-shrink:0;
+    }
+    #chatInput {
+      flex:1; resize:none; border:1px solid var(--sapField_BorderColor,#89919a);
+      border-radius:4px; padding:6px; font-size:13px; font-family:inherit;
+      background: var(--sapField_Background,#fff); color:var(--sapTextColor,#32363a);
+    }
+    #chatInput:disabled { opacity:0.5; }
+    #chatSendBtn {
+      padding:6px 14px; background:var(--sapButton_Emphasized_Background,#0070f2);
+      color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; align-self:flex-end;
+    }
+    #chatSendBtn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    /* Settings modal */
+    #settingsModal {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4);
+      z-index:500; align-items:center; justify-content:center;
+    }
+    #settingsModal.open { display:flex; }
+    #settingsBox {
+      background:var(--sapBaseColor,#fff); border-radius:8px;
+      padding:24px; width:420px; max-width:90vw;
+      box-shadow:0 8px 32px rgba(0,0,0,0.2);
+      font-family:var(--sapFontFamily,"72","72full",Arial,Helvetica,sans-serif);
+    }
+    #settingsBox h2 { margin:0 0 16px; font-size:16px; color:var(--sapTextColor,#32363a); }
+    .settingsRow { margin-bottom:12px; }
+    .settingsRow label { display:block; font-size:12px; color:var(--sapContent_LabelColor,#6a6d70); margin-bottom:4px; }
+    .settingsRow input, .settingsRow select {
+      width:100%; box-sizing:border-box; padding:7px 10px;
+      border:1px solid var(--sapField_BorderColor,#89919a); border-radius:4px;
+      font-size:13px; font-family:inherit; background:var(--sapField_Background,#fff);
+      color:var(--sapTextColor,#32363a);
+    }
+    .settingsRow input:focus, .settingsRow select:focus { outline:2px solid var(--sapButton_Emphasized_Background,#0070f2); border-color:transparent; }
+    .settingsBtns { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+    .btnPrimary {
+      background:var(--sapButton_Emphasized_Background,#0070f2); color:#fff;
+      border:none; border-radius:4px; padding:7px 18px; font-size:13px; cursor:pointer;
+    }
+    .btnSecondary {
+      background:none; border:1px solid var(--sapButton_BorderColor,#0070f2);
+      color:var(--sapButton_TextColor,#0070f2); border-radius:4px;
+      padding:7px 18px; font-size:13px; cursor:pointer;
+    }
+    .btnSecondary:hover { background:var(--sapButton_Hover_Background,#e8f0fe); }
+    .loadRow { display:flex; gap:8px; align-items:center; }
+    .loadRow select { flex:1; }
+  </style>
+</head>
+<body>
+<div id="appShell">
+
+  <!-- Title bar -->
+  <div id="titleBar">
+    <h1 id="titleText">CNY Exchange Rate Dashboard</h1>
+    <a href="/" class="navLink" id="navClassic">Classic UI</a>
+    <a href="/v2" class="navLink" id="navTerminal">Terminal UI</a>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,0.2)"></div>
+    <button class="langBtn" onclick="setLang('en')"    id="langEn">EN</button>
+    <button class="langBtn" onclick="setLang('zh')"    id="langZh">简中</button>
+    <button class="langBtn" onclick="setLang('zht')"   id="langZht">繁中</button>
+    <div id="themeMenuWrap">
+      <button id="themeToggleBtn" onclick="toggleThemeMenu()">Theme ▾</button>
+      <div id="themeDropdown">
+        <button class="themeOpt" id="themeHorizon"    onclick="setTheme('sap_horizon')">SAP Horizon</button>
+        <button class="themeOpt" id="themeHorizonDark" onclick="setTheme('sap_horizon_dark')">Morning Horizon</button>
+        <button class="themeOpt" id="themeHCB"        onclick="setTheme('sap_horizon_hcb')">High Contrast Black</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls bar -->
+  <div id="controlsBar">
+    <!-- Date range -->
+    <input type="date" id="fromDate" onchange="loadAll()">
+    <span class="ctrlLabel">–</span>
+    <input type="date" id="toDate" onchange="loadAll()">
+    <button class="ctrlBtn" onclick="loadAll()" id="refreshBtn" data-i18n="refresh">Refresh</button>
+    <div class="ctrlSep"></div>
+    <!-- Quick ranges -->
+    <button class="ctrlBtn" onclick="setAll()" id="qrAll" data-i18n="all">All</button>
+    <span class="ctrlLabel" data-i18n="inPast">In past</span>
+    <button class="ctrlBtn" onclick="setRange(7)"   id="qr7"   data-i18n="7d">7D</button>
+    <button class="ctrlBtn" onclick="setRange(30)"  id="qr30"  data-i18n="1m">1M</button>
+    <button class="ctrlBtn active" onclick="setRange(90)"  id="qr90"  data-i18n="3m">3M</button>
+    <button class="ctrlBtn" onclick="setRange(180)" id="qr180" data-i18n="6m">6M</button>
+    <button class="ctrlBtn" onclick="setRange(365)" id="qr365" data-i18n="1y">1Y</button>
+    <span class="ctrlLabel" data-i18n="since">Since</span>
+    <button class="ctrlBtn" onclick="setSince('week')"      id="qrThisWeek"  data-i18n="thisWeek">This week</button>
+    <button class="ctrlBtn" onclick="setSince('month')"     id="qrThisMonth" data-i18n="thisMonth">This month</button>
+    <button class="ctrlBtn" onclick="setSince('year')"      id="qrThisYear"  data-i18n="thisYear">This year</button>
+    <button class="ctrlBtn" onclick="setSince('lastWeek')"  id="qrLastWeek"  data-i18n="lastWeek">Last week</button>
+    <button class="ctrlBtn" onclick="setSince('lastMonth')" id="qrLastMonth" data-i18n="lastMonth">Last month</button>
+    <button class="ctrlBtn" onclick="setSince('lastYear')"  id="qrLastYear"  data-i18n="lastYear">Last year</button>
+    <div style="flex:1"></div>
+    <!-- Col picker -->
+    <button class="ctrlBtn" onclick="setCols(1)" id="col1" data-i18n="col1">1 col</button>
+    <button class="ctrlBtn" onclick="setCols(2)" id="col2" data-i18n="col2">2 cols</button>
+    <button class="ctrlBtn active" onclick="setCols(3)" id="col3" data-i18n="col3">3 cols</button>
+    <button class="ctrlBtn" onclick="setCols(4)" id="col4" data-i18n="col4">4 cols</button>
+    <div class="ctrlSep"></div>
+    <!-- View / actions -->
+    <button class="ctrlBtn" onclick="toggleMode()" id="toggleMode" data-i18n="mergedView">Merged View</button>
+    <button class="ctrlBtn" onclick="resetCardOrder()" id="resetOrderBtn" data-i18n="resetOrder">Reset order</button>
+    <button class="ctrlBtn ctrlBtnSuccess" onclick="updateData()" id="updateBtn" data-i18n="updateOfflineData">Update offline data</button>
+    <div class="exportWrap">
+      <button class="ctrlBtn" onclick="toggleExportMenu()" data-i18n="export">Export ▾</button>
+      <div id="exportDropdown">
+        <button class="exportOpt" onclick="exportSeparate()" data-i18n="exportSeparate">Separate images</button>
+        <button class="exportOpt" onclick="exportCombined()" data-i18n="exportCombined">Combined image</button>
+      </div>
+    </div>
+    <button class="ctrlBtn" style="background:var(--sapButton_Emphasized_Background,#0070f2);color:#fff;border-color:var(--sapButton_Emphasized_Background,#0070f2)" onclick="toggleChat()" id="aiChatBtn" data-i18n="aiChat">AI Chat</button>
+  </div>
+
+  <!-- Main content -->
+  <div id="mainContent">
+    <div id="chartArea">
+      <div id="separateGrid" class="chartGrid"></div>
+      <div id="mergedGrid"   class="chartGrid" style="display:none"></div>
+    </div>
+
+    <!-- AI Chat sidebar -->
+    <div id="chatSidebar">
+      <div id="sidebarResizeHandle"></div>
+      <div class="sidebarHeader">
+        <span class="sidebarTitle" data-i18n="aiAssistant">AI Assistant</span>
+        <button class="sidebarBtn" id="resetSizeBtn" style="display:none" onclick="resetSidebarSize()" data-i18n="resetSize">Reset size</button>
+        <button class="sidebarBtn" onclick="moveSidebar()" id="moveChatBtn" data-i18n="moveToLeft">Move to Left</button>
+        <button class="sidebarBtn" onclick="openSettings()" data-i18n="settings">Settings</button>
+        <button class="sidebarBtn" onclick="toggleChat()">✕</button>
+      </div>
+      <div id="chatCheckSection">
+        <span class="checkSectionLabel" data-i18n="includeCharts">Include charts:</span>
+        <button class="checkToggleBtn" onclick="checkAll()" data-i18n="selectAll">All</button>
+        <button class="checkToggleBtn" onclick="checkNone()" data-i18n="deselectAll">None</button>
+        <div id="chartCheckboxList"></div>
+      </div>
+      <div id="chatMessages"></div>
+      <div id="chatInputArea">
+        <textarea id="chatInput" rows="2" disabled data-i18n-placeholder="chatPlaceholderNotReady"></textarea>
+        <button id="chatSendBtn" onclick="sendChat()" disabled data-i18n="send">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar resize handle -->
+<div id="resizeHandle" style="position:fixed;top:0;width:5px;height:100vh;cursor:col-resize;z-index:400;display:none"></div>
+
+<!-- Settings modal -->
+<div id="settingsModal">
+  <div id="settingsBox">
+    <h2 data-i18n="aiSettings">AI Assistant Settings</h2>
+    <div class="settingsRow">
+      <label data-i18n="baseUrl">LiteLLM Base URL</label>
+      <input id="settingUrl" type="url" placeholder="http://localhost:6655/litellm"/>
+    </div>
+    <div class="settingsRow">
+      <label data-i18n="apiKey">API Key</label>
+      <input id="settingKey" type="password"/>
+    </div>
+    <div class="settingsRow">
+      <label data-i18n="model">Model</label>
+      <div class="loadRow">
+        <select id="settingModel"><option value="" data-i18n="selectModelHint">-- select a model --</option></select>
+        <button class="btnSecondary" id="loadModelsBtn" onclick="loadModels()" data-i18n="load">Load</button>
+      </div>
+    </div>
+    <div class="settingsBtns">
+      <button class="btnSecondary" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
+      <button class="btnPrimary"   onclick="saveSettings()"  data-i18n="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    title: "CNY Exchange Rate Dashboard",
+    refresh: "Refresh", all: "All", inPast: "In past", since: "Since",
+    thisWeek: "This week", thisMonth: "This month", thisYear: "This year",
+    lastWeek: "Last week", lastMonth: "Last month", lastYear: "Last year",
+    col1: "1 col", col2: "2 cols", col3: "3 cols", col4: "4 cols",
+    "7d": "7D", "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y",
+    mergedView: "Merged View", separateView: "Separate View",
+    updateOfflineData: "Update offline data",
+    export: "Export ▾", exportSeparate: "Separate images", exportCombined: "Combined image",
+    aiChat: "AI Chat", noData: "No data available",
+    mergedCNYTitle: "Western (GBP / EUR / USD) -> CNY",
+    mergedCrossTitle: "Cross Rates (GBP / EUR / USD)",
+    mergedCNYOutTitle: "CNY Outbound",
+    aiAssistant: "AI Assistant", moveToLeft: "Move to Left", moveToRight: "Move to Right",
+    settings: "Settings", includeCharts: "Include charts:",
+    selectAll: "All", deselectAll: "None", send: "Send",
+    chatPlaceholderReady: "Ask about the data...",
+    chatPlaceholderNotReady: "Configure AI settings first (click Settings)",
+    thinking: "Thinking...",
+    aiSettings: "AI Assistant Settings",
+    baseUrl: "LiteLLM Base URL", apiKey: "API Key", model: "Model",
+    load: "Load", loading: "Loading...",
+    loadModelsAlert: "Please fill in the Base URL and API Key first.",
+    loadModelsFailed: "Failed to load models: ",
+    selectModelHint: "-- select a model --",
+    cancel: "Cancel", save: "Save",
+    updating: "Updating...", upToDate: "Up-to-date!", failed: "Failed",
+    noChartsSelected: "No charts selected — check at least one chart to include data context.",
+    loadingData: "Loading...", selectModelFirst: "Please select a model before saving.",
+    noDataYet: "No data yet — run 'Update offline data' to collect rates first.",
+    exportTooLarge: "The combined image is too large to export. Try fewer columns or switch to Merged View.",
+    resetOrder: "Reset order", resetSize: "Reset size",
+    classicUi: "Classic UI", terminalUi: "Terminal UI",
+    theme: "Theme ▾",
+    chartGBPCNY:"GBP -> CNY", chartEURCNY:"EUR -> CNY", chartUSDCNY:"USD -> CNY",
+    chartGBPEUR:"GBP -> EUR", chartGBPUSD:"GBP -> USD", chartEURUSD:"EUR -> USD",
+    chartCNYJPY:"CNY -> JPY", chartCNYKRW:"CNY -> KRW", chartCNYTWD:"CNY -> TWD",
+    chartCNYINR:"CNY -> INR", chartCNYRUB:"CNY -> RUB", chartCNYHKD:"CNY -> HKD",
+    chartCNYUAH:"CNY -> UAH", chartILSCNY:"ILS -> CNY",
+    chartUSDJPY:"USD -> JPY", chartUSDTWD:"USD -> TWD",
+    chartBTCUSD:"BTC -> USD", chartBTCCNY:"BTC -> CNY", chartBTCEUR:"BTC -> EUR",
+  },
+  zh: {
+    title: "人民币汇率仪表盘",
+    refresh: "刷新", all: "全部", inPast: "过去", since: "自",
+    thisWeek: "本周", thisMonth: "本月", thisYear: "今年",
+    lastWeek: "上周", lastMonth: "上月", lastYear: "去年",
+    col1: "1列", col2: "2列", col3: "3列", col4: "4列",
+    "7d": "7天", "1m": "1个月", "3m": "3个月", "6m": "6个月", "1y": "1年",
+    mergedView: "合并视图", separateView: "分离视图",
+    updateOfflineData: "更新离线数据",
+    export: "导出 ▾", exportSeparate: "分别导出图片", exportCombined: "合并导出图片",
+    aiChat: "AI 对话", noData: "暂无数据",
+    mergedCNYTitle: "西方货币 (GBP / EUR / USD) -> 人民币",
+    mergedCrossTitle: "交叉汇率 (GBP / EUR / USD)", mergedCNYOutTitle: "人民币兑出",
+    aiAssistant: "AI 助手", moveToLeft: "移至左侧", moveToRight: "移至右侧",
+    settings: "设置", includeCharts: "包含图表：",
+    selectAll: "全选", deselectAll: "取消", send: "发送",
+    chatPlaceholderReady: "询问数据相关问题...",
+    chatPlaceholderNotReady: "请先配置 AI 设置（点击设置）",
+    thinking: "思考中...", aiSettings: "AI 助手设置",
+    baseUrl: "LiteLLM 地址", apiKey: "API 密钥", model: "模型",
+    load: "加载", loading: "加载中...",
+    loadModelsAlert: "请先填写 Base URL 和 API 密钥。",
+    loadModelsFailed: "加载模型失败：", selectModelHint: "-- 选择模型 --",
+    cancel: "取消", save: "保存",
+    updating: "更新中...", upToDate: "已是最新！", failed: "失败",
+    noChartsSelected: "未选择图表——请至少勾选一个图表。",
+    loadingData: "加载中...", selectModelFirst: "请先选择模型再保存。",
+    noDataYet: "暂无数据——请点击「更新离线数据」按钮先采集汇率数据。",
+    exportTooLarge: "合并图片尺寸过大，无法导出。请减少列数或切换至合并视图。",
+    resetOrder: "重置顺序", resetSize: "重置大小",
+    classicUi: "经典界面", terminalUi: "终端界面",
+    theme: "主题 ▾",
+    chartGBPCNY:"英镑 -> 人民币", chartEURCNY:"欧元 -> 人民币", chartUSDCNY:"美元 -> 人民币",
+    chartGBPEUR:"英镑 -> 欧元", chartGBPUSD:"英镑 -> 美元", chartEURUSD:"欧元 -> 美元",
+    chartCNYJPY:"人民币 -> 日元", chartCNYKRW:"人民币 -> 韩元", chartCNYTWD:"人民币 -> 新台币",
+    chartCNYINR:"人民币 -> 印度卢比", chartCNYRUB:"人民币 -> 卢布", chartCNYHKD:"人民币 -> 港币",
+    chartCNYUAH:"人民币 -> 乌克兰格里夫纳", chartILSCNY:"以色列新谢克尔 -> 人民币",
+    chartUSDJPY:"美元 -> 日元", chartUSDTWD:"美元 -> 新台币",
+    chartBTCUSD:"比特币 -> 美元", chartBTCCNY:"比特币 -> 人民币", chartBTCEUR:"比特币 -> 欧元",
+  },
+  zht: {
+    title: "人民幣匯率儀表板",
+    refresh: "重新整理", all: "全部", inPast: "過去", since: "自",
+    thisWeek: "本週", thisMonth: "本月", thisYear: "今年",
+    lastWeek: "上週", lastMonth: "上月", lastYear: "去年",
+    col1: "1欄", col2: "2欄", col3: "3欄", col4: "4欄",
+    "7d": "7天", "1m": "1個月", "3m": "3個月", "6m": "6個月", "1y": "1年",
+    mergedView: "合併檢視", separateView: "分離檢視",
+    updateOfflineData: "更新離線資料",
+    export: "匯出 ▾", exportSeparate: "分別匯出圖片", exportCombined: "合併匯出圖片",
+    aiChat: "AI 對話", noData: "暫無資料",
+    mergedCNYTitle: "西方貨幣 (GBP / EUR / USD) -> 人民幣",
+    mergedCrossTitle: "交叉匯率 (GBP / EUR / USD)", mergedCNYOutTitle: "人民幣兌出",
+    aiAssistant: "AI 助理", moveToLeft: "移至左側", moveToRight: "移至右側",
+    settings: "設定", includeCharts: "包含圖表：",
+    selectAll: "全選", deselectAll: "取消", send: "傳送",
+    chatPlaceholderReady: "詢問資料相關問題...",
+    chatPlaceholderNotReady: "請先設定 AI（點擊設定）",
+    thinking: "思考中...", aiSettings: "AI 助理設定",
+    baseUrl: "LiteLLM 位址", apiKey: "API 金鑰", model: "模型",
+    load: "載入", loading: "載入中...",
+    loadModelsAlert: "請先填寫 Base URL 和 API 金鑰。",
+    loadModelsFailed: "載入模型失敗：", selectModelHint: "-- 選擇模型 --",
+    cancel: "取消", save: "儲存",
+    updating: "更新中...", upToDate: "已是最新！", failed: "失敗",
+    noChartsSelected: "未選擇圖表——請至少勾選一個圖表。",
+    loadingData: "載入中...", selectModelFirst: "請先選擇模型再儲存。",
+    noDataYet: "暫無資料——請點擊「更新離線資料」按鈕先採集匯率資料。",
+    exportTooLarge: "合併圖片尺寸過大，無法匯出。請減少欄數或切換至合併檢視。",
+    resetOrder: "重置順序", resetSize: "重置大小",
+    classicUi: "經典介面", terminalUi: "終端介面",
+    theme: "主題 ▾",
+    chartGBPCNY:"英鎊 -> 人民幣", chartEURCNY:"歐元 -> 人民幣", chartUSDCNY:"美元 -> 人民幣",
+    chartGBPEUR:"英鎊 -> 歐元", chartGBPUSD:"英鎊 -> 美元", chartEURUSD:"歐元 -> 美元",
+    chartCNYJPY:"人民幣 -> 日圓", chartCNYKRW:"人民幣 -> 韓元", chartCNYTWD:"人民幣 -> 新台幣",
+    chartCNYINR:"人民幣 -> 印度盧比", chartCNYRUB:"人民幣 -> 盧布", chartCNYHKD:"人民幣 -> 港幣",
+    chartCNYUAH:"人民幣 -> 烏克蘭格里夫納", chartILSCNY:"以色列新謝克爾 -> 人民幣",
+    chartUSDJPY:"美元 -> 日圓", chartUSDTWD:"美元 -> 新台幣",
+    chartBTCUSD:"比特幣 -> 美元", chartBTCCNY:"比特幣 -> 人民幣", chartBTCEUR:"比特幣 -> 歐元",
+  }
+};
+
+let currentLang = localStorage.getItem("lang") || "en";
+function t(k) { return (I18N[currentLang] || I18N.en)[k] || I18N.en[k] || k; }
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem("lang", lang);
+  applyLang();
+}
+
+function applyLang() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const k = el.dataset.i18n;
+    if (el.tagName === "INPUT" && el.type !== "button") return;
+    el.textContent = t(k);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.getElementById("titleText").textContent = t("title");
+  document.getElementById("navClassic").textContent = t("classicUi");
+  document.getElementById("navTerminal").textContent = t("terminalUi");
+  document.getElementById("themeToggleBtn").textContent = t("theme");
+  ["langEn","langZh","langZht"].forEach(id => {
+    const btn = document.getElementById(id);
+    const code = id === "langEn" ? "en" : id === "langZh" ? "zh" : "zht";
+    btn.classList.toggle("active", currentLang === code);
+  });
+  document.documentElement.lang = currentLang === "zh" ? "zh-CN" : currentLang === "zht" ? "zh-TW" : "en-US";
+  populateCheckboxes();
+}
+
+// ── Chart metadata ────────────────────────────────────────────────────────────
+const CHART_META = {
+  chartGBPCNY: { color:"#9333ea" }, chartEURCNY: { color:"#06b6d4" }, chartUSDCNY: { color:"#2563eb" },
+  chartGBPEUR: { color:"#2563eb" }, chartGBPUSD: { color:"#f472b6" }, chartEURUSD: { color:"#a78bfa" },
+  chartCNYJPY: { color:"#2563eb" }, chartCNYKRW: { color:"#f472b6" }, chartCNYTWD: { color:"#06b6d4" },
+  chartCNYINR: { color:"#ea580c" }, chartCNYRUB: { color:"#e879f9" }, chartCNYHKD: { color:"#0891b2" },
+  chartCNYUAH: { color:"#8b5cf6" }, chartILSCNY: { color:"#d97706" },
+  chartUSDJPY: { color:"#9333ea" }, chartUSDTWD: { color:"#0891b2" },
+  chartBTCUSD: { color:"#2563eb" }, chartBTCCNY: { color:"#fb923c" }, chartBTCEUR: { color:"#a78bfa" },
+};
+
+const DEFAULT_ORDER_SEPARATE = [
+  "chartGBPCNY","chartEURCNY","chartUSDCNY",
+  "chartCNYJPY","chartCNYKRW","chartCNYTWD","chartCNYINR","chartCNYRUB","chartCNYHKD","chartCNYUAH","chartILSCNY",
+  "chartUSDTWD","chartGBPEUR","chartGBPUSD","chartEURUSD","chartUSDJPY",
+  "chartBTCUSD","chartBTCCNY","chartBTCEUR"
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const charts = {};
+let mergedMode = false;
+let cols = 3;
+let chatHistory = [];
+let dragSrc = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function toLocalDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function fetchRates(base, target) {
+  const from = document.getElementById("fromDate").value;
+  const to   = document.getElementById("toDate").value;
+  let url = `/api/rates?base=${base}&target=${target}`;
+  if (from) url += `&from=${from}`;
+  if (to)   url += `&to=${to}`;
+  return fetch(url).then(r => r.json());
+}
+function clearRangeActive() {
+  ["qrAll","qr7","qr30","qr90","qr180","qr365",
+   "qrThisWeek","qrThisMonth","qrThisYear","qrLastWeek","qrLastMonth","qrLastYear"
+  ].forEach(id => document.getElementById(id)?.classList.remove("active"));
+}
+
+// ── Quick ranges ──────────────────────────────────────────────────────────────
+async function setAll() {
+  const res = await fetch("/api/date-range");
+  const { min, max } = await res.json();
+  if (!min || !max) { alert(t("noDataYet")); return; }
+  document.getElementById("fromDate").value = min;
+  document.getElementById("toDate").value   = max;
+  clearRangeActive();
+  document.getElementById("qrAll").classList.add("active");
+  loadAll();
+}
+function setRange(days) {
+  const to = new Date(), from = new Date();
+  from.setDate(from.getDate() - days);
+  document.getElementById("toDate").value   = toLocalDate(to);
+  document.getElementById("fromDate").value = toLocalDate(from);
+  clearRangeActive();
+  document.getElementById("qr" + days)?.classList.add("active");
+  loadAll();
+}
+function setSince(period) {
+  const today = new Date();
+  let from, to = today;
+  if      (period === "week")      { from = new Date(today); from.setDate(today.getDate() - today.getDay() + (today.getDay()===0?-6:1)); }
+  else if (period === "month")     { from = new Date(today.getFullYear(), today.getMonth(), 1); }
+  else if (period === "year")      { from = new Date(today.getFullYear(), 0, 1); }
+  else if (period === "lastWeek")  { const d=today.getDay()||7; from=new Date(today); from.setDate(today.getDate()-d-6); to=new Date(today); to.setDate(today.getDate()-d); }
+  else if (period === "lastMonth") { from=new Date(today.getFullYear(),today.getMonth()-1,1); to=new Date(today.getFullYear(),today.getMonth(),0); }
+  else if (period === "lastYear")  { from=new Date(today.getFullYear()-1,0,1); to=new Date(today.getFullYear()-1,11,31); }
+  document.getElementById("fromDate").value = toLocalDate(from);
+  document.getElementById("toDate").value   = toLocalDate(to);
+  const idMap = {week:"qrThisWeek",month:"qrThisMonth",year:"qrThisYear",lastWeek:"qrLastWeek",lastMonth:"qrLastMonth",lastYear:"qrLastYear"};
+  clearRangeActive();
+  document.getElementById(idMap[period])?.classList.add("active");
+  loadAll();
+}
+
+// ── Column picker ─────────────────────────────────────────────────────────────
+function setCols(n) {
+  cols = n;
+  ["col1","col2","col3","col4"].forEach(id => document.getElementById(id).classList.remove("active"));
+  document.getElementById("col" + n).classList.add("active");
+  Object.values(charts).forEach(c => c.destroy());
+  for (const k of Object.keys(charts)) delete charts[k];
+  document.getElementById("separateGrid").innerHTML = "";
+  document.getElementById("mergedGrid").innerHTML = "";
+  loadAll();
+}
+
+// ── View toggle ───────────────────────────────────────────────────────────────
+function toggleMode() {
+  mergedMode = !mergedMode;
+  document.getElementById("separateGrid").style.display = mergedMode ? "none" : "flex";
+  document.getElementById("mergedGrid").style.display   = mergedMode ? "flex" : "none";
+  document.getElementById("toggleMode").textContent = t(mergedMode ? "separateView" : "mergedView");
+  Object.values(charts).forEach(c => c.destroy());
+  for (const k of Object.keys(charts)) delete charts[k];
+  loadAll();
+}
+
+// ── Update offline data ───────────────────────────────────────────────────────
+async function updateData() {
+  const btn = document.getElementById("updateBtn");
+  btn.textContent = t("updating"); btn.disabled = true;
+  btn.className = "ctrlBtn";
+  try {
+    const res = await fetch("/api/collect", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({from_date: document.getElementById("fromDate").value || null}) });
+    const { ok } = await res.json();
+    btn.textContent = ok ? t("upToDate") : t("failed");
+    btn.className = ok ? "ctrlBtn ctrlBtnSuccess" : "ctrlBtn ctrlBtnDanger";
+    if (ok) loadAll();
+  } catch(e) {
+    btn.textContent = t("failed"); btn.className = "ctrlBtn ctrlBtnDanger";
+  } finally {
+    setTimeout(() => { btn.textContent = t("updateOfflineData"); btn.className = "ctrlBtn ctrlBtnSuccess"; btn.disabled = false; }, 2500);
+  }
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function toggleExportMenu() {
+  const d = document.getElementById("exportDropdown");
+  d.style.display = d.style.display === "flex" ? "none" : "flex";
+}
+function visibleCanvases() {
+  const grid = document.getElementById(mergedMode ? "mergedGrid" : "separateGrid");
+  return Array.from(grid.querySelectorAll("canvas[id]"));
+}
+function exportSeparate() {
+  toggleExportMenu();
+  const titleH = 48;
+  visibleCanvases().forEach(canvas => {
+    const title = canvas.closest(".chartCard")?.querySelector(".chartTitle")?.textContent.trim() || canvas.id;
+    const out = document.createElement("canvas");
+    out.width = canvas.width; out.height = canvas.height + titleH;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,out.width,out.height);
+    ctx.fillStyle = "#32363a"; ctx.font = "bold 20px sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(title, out.width/2, titleH/2);
+    ctx.drawImage(canvas, 0, titleH);
+    const a = document.createElement("a"); a.href = out.toDataURL("image/png"); a.download = canvas.id + ".png"; a.click();
+  });
+}
+function exportCombined() {
+  toggleExportMenu();
+  const canvases = visibleCanvases();
+  if (!canvases.length) return;
+  const gap=24, pad=24, titleH=48;
+  const cw=canvases[0].width, ch=canvases[0].height, cellH=titleH+ch;
+  const rows=Math.ceil(canvases.length/cols);
+  const totalW=pad*2+cw*cols+gap*(cols-1), totalH=pad*2+cellH*rows+gap*(rows-1);
+  if (totalW>16384||totalH>16384||totalW*totalH>268435456) { alert(t("exportTooLarge")); return; }
+  const out=document.createElement("canvas"); out.width=totalW; out.height=totalH;
+  const ctx=out.getContext("2d");
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,totalW,totalH);
+  ctx.font="bold 20px sans-serif"; ctx.fillStyle="#32363a"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  canvases.forEach((c,i) => {
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=pad+col*(cw+gap), y=pad+row*(cellH+gap);
+    const title=c.closest(".chartCard")?.querySelector(".chartTitle")?.textContent.trim()||"";
+    ctx.fillText(title, x+cw/2, y+titleH/2);
+    ctx.drawImage(c, x, y+titleH);
+  });
+  const a=document.createElement("a"); a.href=out.toDataURL("image/png"); a.download="charts.png"; a.click();
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function toggleThemeMenu() {
+  const d = document.getElementById("themeDropdown");
+  d.style.display = d.style.display === "flex" ? "none" : "flex";
+}
+function setTheme(name) {
+  document.getElementById("themeDropdown").style.display = "none";
+  localStorage.setItem("v3theme", name);
+  document.querySelectorAll(".themeOpt").forEach(b => b.classList.remove("active"));
+  const idMap = { sap_horizon:"themeHorizon", sap_horizon_dark:"themeHorizonDark", sap_horizon_hcb:"themeHCB" };
+  document.getElementById(idMap[name])?.classList.add("active");
+  // Swap the CSS theme links directly (no UI5 runtime needed)
+  const base = "https://sdk.openui5.org/1.120.17/resources";
+  document.getElementById("ui5ThemeLink").href  = `${base}/sap/ui/core/themes/${name}/library.css`;
+  document.getElementById("ui5ThemeLinkM").href = `${base}/sap/m/themes/${name}/library.css`;
+}
+
+// ── Min/Max plugin ────────────────────────────────────────────────────────────
+const minMaxPlugin = {
+  id: "minMaxLabels",
+  afterDatasetsDraw(chart) {
+    const ctx = chart.ctx;
+    chart.data.datasets.forEach((dataset, di) => {
+      const values = dataset.data.filter(v => v != null);
+      if (!values.length) return;
+      const max = Math.max(...values), min = Math.min(...values);
+      const maxIdx = dataset.data.indexOf(max), minIdx = dataset.data.indexOf(min);
+      const meta = chart.getDatasetMeta(di);
+      if (!meta.visible) return;
+      [{idx:maxIdx,val:max,above:true},{idx:minIdx,val:min,above:false}].forEach(({idx,val,above}) => {
+        const pt = meta.data[idx];
+        if (!pt) return;
+        const {x,y} = pt, label = val.toFixed(4);
+        const area = chart.chartArea;
+        ctx.save(); ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center";
+        const tw = ctx.measureText(label).width, pad=3, bw=tw+pad*2, bh=16;
+        let bx = Math.max(area.left, Math.min(x-bw/2, area.right-bw));
+        let by = above ? y-24 : y+6;
+        if (by < area.top) by = y+6;
+        if (by+bh > area.bottom) by = y-24;
+        ctx.fillStyle = above ? "#16a34a" : "#dc2626";
+        ctx.fillRect(bx,by,bw,bh);
+        ctx.fillStyle = "#fff"; ctx.fillText(label, bx+bw/2, by+12); ctx.restore();
+        ctx.save(); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+        ctx.fillStyle = above ? "#16a34a" : "#dc2626"; ctx.fill(); ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(minMaxPlugin);
+
+// ── Chart rendering ───────────────────────────────────────────────────────────
+const chartOptions = () => ({
+  responsive: true, maintainAspectRatio: false, animation: false,
+  interaction: { mode:"index", intersect:false },
+  plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+": "+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(4):"N/A") }}},
+  scales: {
+    x: { type:"category", grid:{color:"rgba(0,0,0,0.06)"}, ticks:{maxTicksLimit:8,maxRotation:0} },
+    y: { grid:{color:"rgba(0,0,0,0.06)"}, ticks:{callback:v=>v.toFixed(2)} }
+  }
+});
+
+function ensureCard(gridId, canvasId, title) {
+  const grid = document.getElementById(gridId);
+  if (document.getElementById(canvasId)) {
+    const card = document.getElementById(canvasId).closest(".chartCard");
+    if (card) card.style.width = `calc(${100/cols}% - ${14*(cols-1)/cols}px)`;
+    return;
+  }
+  const card = document.createElement("div");
+  card.className = "chartCard";
+  card.style.width = `calc(${100/cols}% - ${14*(cols-1)/cols}px)`;
+  card.draggable = true;
+  card.innerHTML = `<div class="chartCardHeader"><span class="chartTitle">${title}</span></div><div class="chartCanvasWrap"><canvas id="${canvasId}"></canvas></div>`;
+  grid.appendChild(card);
+  bindDrag(card);
+}
+
+function renderChart(canvasId, label, apiData, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
+  const labels = (apiData.data||[]).map(r=>r.date);
+  const values = (apiData.data||[]).map(r=>r.rate);
+  charts[canvasId] = new Chart(canvas, {
+    type:"line", data:{ labels, datasets:[{ label, data:values, borderColor:color, borderWidth:1.5, pointRadius:0, tension:0.1 }] },
+    options: chartOptions()
+  });
+}
+
+function renderMergedChart(canvasId, datasets) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
+  const labels = (datasets[0]?.data?.data||[]).map(r=>r.date);
+  const opts = chartOptions();
+  opts.plugins.legend = { display:true, position:"top", labels:{boxWidth:12,font:{size:11}} };
+  charts[canvasId] = new Chart(canvas, {
+    type:"line",
+    data:{ labels, datasets: datasets.map(ds=>({ label:ds.label, data:(ds.data.data||[]).map(r=>r.rate), borderColor:ds.color, borderWidth:1.5, pointRadius:0, tension:0.1 })) },
+    options: opts
+  });
+}
+
+// ── Load all ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  if (typeof Chart === "undefined") {
+    document.getElementById("separateGrid").innerHTML = "<p style='padding:16px;color:red'>Chart.js failed to load. Check your internet connection.</p>";
+    return;
+  }
+  try {
+    const [gbpCny,eurCny,usdCny,gbpEur,gbpUsd,eurUsd,
+           cnyJpy,cnyKrw,cnyTwd,cnyInr,cnyRub,cnyHkd,cnyUah,
+           ilsCny,usdJpy,usdTwd,btcUsd,btcCny,btcEur] = await Promise.all([
+      fetchRates("GBP","CNY"),fetchRates("EUR","CNY"),fetchRates("USD","CNY"),
+      fetchRates("GBP","EUR"),fetchRates("GBP","USD"),fetchRates("EUR","USD"),
+      fetchRates("CNY","JPY"),fetchRates("CNY","KRW"),fetchRates("CNY","TWD"),
+      fetchRates("CNY","INR"),fetchRates("CNY","RUB"),fetchRates("CNY","HKD"),
+      fetchRates("CNY","UAH"),fetchRates("ILS","CNY"),
+      fetchRates("USD","JPY"),fetchRates("USD","TWD"),
+      fetchRates("BTC","USD"),fetchRates("BTC","CNY"),fetchRates("BTC","EUR"),
+    ]);
+
+    if (mergedMode) {
+      [
+        {id:"chartMergedCNY",    title:t("mergedCNYTitle"),   datasets:[{label:"GBP->CNY",data:gbpCny,color:"#9333ea"},{label:"EUR->CNY",data:eurCny,color:"#06b6d4"},{label:"USD->CNY",data:usdCny,color:"#2563eb"}]},
+        {id:"chartMergedCross",  title:t("mergedCrossTitle"), datasets:[{label:"GBP->EUR",data:gbpEur,color:"#2563eb"},{label:"GBP->USD",data:gbpUsd,color:"#f472b6"},{label:"EUR->USD",data:eurUsd,color:"#a78bfa"}]},
+        {id:"chartMergedCNYOut", title:t("mergedCNYOutTitle"),datasets:[{label:"CNY->JPY",data:cnyJpy,color:"#2563eb"},{label:"CNY->KRW",data:cnyKrw,color:"#f472b6"},{label:"CNY->TWD",data:cnyTwd,color:"#06b6d4"},{label:"CNY->INR",data:cnyInr,color:"#ea580c"},{label:"CNY->RUB",data:cnyRub,color:"#e879f9"},{label:"CNY->HKD",data:cnyHkd,color:"#0891b2"}]},
+      ].forEach(p => { ensureCard("mergedGrid",p.id,p.title); renderMergedChart(p.id,p.datasets); });
+    } else {
+      const pairs = [
+        {id:"chartGBPCNY",data:gbpCny},{id:"chartEURCNY",data:eurCny},{id:"chartUSDCNY",data:usdCny},
+        {id:"chartCNYJPY",data:cnyJpy},{id:"chartCNYKRW",data:cnyKrw},{id:"chartCNYTWD",data:cnyTwd},
+        {id:"chartCNYINR",data:cnyInr},{id:"chartCNYRUB",data:cnyRub},{id:"chartCNYHKD",data:cnyHkd},
+        {id:"chartCNYUAH",data:cnyUah},{id:"chartILSCNY",data:ilsCny},{id:"chartUSDTWD",data:usdTwd},
+        {id:"chartGBPEUR",data:gbpEur},{id:"chartGBPUSD",data:gbpUsd},{id:"chartEURUSD",data:eurUsd},
+        {id:"chartUSDJPY",data:usdJpy},
+        {id:"chartBTCUSD",data:btcUsd},{id:"chartBTCCNY",data:btcCny},{id:"chartBTCEUR",data:btcEur},
+      ];
+      pairs.forEach(p => {
+        const title = t(p.id);
+        ensureCard("separateGrid", p.id, title);
+        renderChart(p.id, title, p.data, CHART_META[p.id]?.color || "#2563eb");
+      });
+      restoreCardOrder();
+    }
+    populateCheckboxes();
+  } catch(e) {
+    console.error("loadAll failed:", e);
+    document.getElementById("separateGrid").innerHTML = `<p style='padding:16px;color:red'>Error: ${e.message}</p>`;
+  }
+}
+
+// ── Drag & drop ───────────────────────────────────────────────────────────────
+function bindDrag(card) {
+  let enterCount = 0;
+  card.addEventListener("dragstart", e => { dragSrc=card; e.dataTransfer.effectAllowed="move"; setTimeout(()=>card.classList.add("dragging"),0); });
+  card.addEventListener("dragend", () => { card.classList.remove("dragging"); document.querySelectorAll(".chartCard").forEach(c=>c.classList.remove("dragOver")); dragSrc=null; });
+  card.addEventListener("dragenter", e => { e.preventDefault(); enterCount++; if(card!==dragSrc)card.classList.add("dragOver"); });
+  card.addEventListener("dragleave", () => { if(--enterCount===0)card.classList.remove("dragOver"); });
+  card.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect="move"; });
+  card.addEventListener("drop", e => {
+    e.preventDefault(); enterCount=0; card.classList.remove("dragOver");
+    if (!dragSrc||dragSrc===card) return;
+    const p=card.parentNode, sn=dragSrc.nextSibling, tn=card.nextSibling;
+    if(tn===dragSrc) p.insertBefore(dragSrc,card); else { p.insertBefore(card,sn); p.insertBefore(dragSrc,tn); }
+    saveCardOrder();
+  });
+}
+
+function saveCardOrder() {
+  const grid = document.getElementById(mergedMode?"mergedGrid":"separateGrid");
+  const order = Array.from(grid.querySelectorAll("canvas[id]")).map(c=>c.id);
+  localStorage.setItem("chartOrder_"+(mergedMode?"merged":"separate"), JSON.stringify(order));
+  document.getElementById("resetOrderBtn").style.display = "";
+}
+function restoreCardOrder() {
+  const grid = document.getElementById(mergedMode?"mergedGrid":"separateGrid");
+  let order; try { order = JSON.parse(localStorage.getItem("chartOrder_"+(mergedMode?"merged":"separate"))); } catch(e){return;}
+  if (!order?.length) return;
+  order.forEach(id => { const card=grid.querySelector(`canvas#${id}`)?.closest(".chartCard"); if(card)grid.appendChild(card); });
+  document.getElementById("resetOrderBtn").style.display = "";
+}
+function resetCardOrder() {
+  localStorage.removeItem("chartOrder_separate"); localStorage.removeItem("chartOrder_merged");
+  document.getElementById("resetOrderBtn").style.display = "none";
+  document.getElementById("separateGrid").innerHTML = "";
+  document.getElementById("mergedGrid").innerHTML = "";
+  Object.values(charts).forEach(c=>c.destroy()); for(const k of Object.keys(charts))delete charts[k];
+  loadAll();
+}
+
+// ── AI Chat ───────────────────────────────────────────────────────────────────
+function toggleChat() {
+  const s = document.getElementById("chatSidebar");
+  s.classList.toggle("open");
+}
+function moveSidebar() {
+  const s = document.getElementById("chatSidebar");
+  const isLeft = s.classList.contains("sidebar-left");
+  s.classList.toggle("sidebar-left", !isLeft);
+  const mainContent = document.getElementById("mainContent");
+  if (!isLeft) mainContent.insertBefore(s, mainContent.firstChild);
+  else mainContent.appendChild(s);
+  document.getElementById("moveChatBtn").textContent = isLeft ? t("moveToLeft") : t("moveToRight");
+}
+function populateCheckboxes() {
+  const container = document.getElementById("chartCheckboxList");
+  if (!container) return;
+  const ids = mergedMode ? ["chartMergedCNY","chartMergedCross","chartMergedCNYOut"] : DEFAULT_ORDER_SEPARATE;
+  container.innerHTML = ids.map(id => `<label class="checkLabel"><input type="checkbox" value="${id}"> ${t(id)}</label>`).join("");
+}
+function checkAll()  { document.querySelectorAll("#chartCheckboxList input").forEach(c=>c.checked=true); }
+function checkNone() { document.querySelectorAll("#chartCheckboxList input").forEach(c=>c.checked=false); }
+function updateChatReady() {
+  const ready = !!(localStorage.getItem("llm_url") && localStorage.getItem("llm_key") && localStorage.getItem("llm_model"));
+  const input = document.getElementById("chatInput"), btn = document.getElementById("chatSendBtn");
+  if (input) { input.disabled = !ready; input.placeholder = t(ready?"chatPlaceholderReady":"chatPlaceholderNotReady"); }
+  if (btn) btn.disabled = !ready;
+}
+async function sendChat() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim(); if (!text) return;
+  input.value = ""; appendBubble("user", text);
+  const checked = Array.from(document.querySelectorAll("#chartCheckboxList input:checked")).map(c=>c.value);
+  if (!checked.length) { appendBubble("assistant", t("noChartsSelected")); input.value=text; return; }
+  chatHistory.push({role:"user",content:text});
+  const data = checked.flatMap(id => {
+    const c=charts[id]; if(!c)return[];
+    return c.data.datasets.map(ds=>({pair:ds.label||id,dates:c.data.labels||[],rates:ds.data}));
+  });
+  const thinking = appendBubble("thinking", t("thinking"));
+  try {
+    const res = await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:chatHistory,data,from_date:document.getElementById("fromDate").value,to_date:document.getElementById("toDate").value,base_url:localStorage.getItem("llm_url"),api_key:localStorage.getItem("llm_key"),model:localStorage.getItem("llm_model")})});
+    const json = await res.json();
+    const reply = json.reply || json.detail || ("Error: "+res.status);
+    thinking.className="chatBubble assistant";
+    thinking.innerHTML = window.marked ? window.marked.parse(reply) : reply;
+    chatHistory.push({role:"assistant",content:reply});
+  } catch(e) { thinking.className="chatBubble assistant"; thinking.textContent="Error: "+e.message; }
+}
+function appendBubble(role, text) {
+  const c=document.getElementById("chatMessages");
+  const d=document.createElement("div"); d.className="chatBubble "+role;
+  if (role==="assistant"&&window.marked) d.innerHTML=window.marked.parse(text); else d.textContent=text;
+  c.appendChild(d); c.scrollTop=999999; return d;
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById("settingUrl").value = localStorage.getItem("llm_url")||"http://localhost:6655/litellm";
+  document.getElementById("settingKey").value = localStorage.getItem("llm_key")||"";
+  const saved = localStorage.getItem("llm_model")||"";
+  const sel = document.getElementById("settingModel");
+  if (saved && ![...sel.options].some(o=>o.value===saved)) {
+    const opt=document.createElement("option"); opt.value=saved; opt.textContent=saved; sel.appendChild(opt);
+  }
+  sel.value = saved;
+  document.getElementById("settingsModal").classList.add("open");
+}
+function closeSettings() { document.getElementById("settingsModal").classList.remove("open"); }
+async function loadModels() {
+  const url=document.getElementById("settingUrl").value.trim(), key=document.getElementById("settingKey").value.trim();
+  const btn=document.getElementById("loadModelsBtn");
+  if (!url||!key) { alert(t("loadModelsAlert")); return; }
+  btn.textContent=t("loading"); btn.disabled=true;
+  try {
+    const res=await fetch("/api/models",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({base_url:url,api_key:key})});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const json=await res.json();
+    const models=[...new Set((json.data||[]).filter(m=>m.model_info?.mode==="chat").map(m=>m.model_name||m.id).filter(Boolean))].sort();
+    const sel=document.getElementById("settingModel"), current=sel.value;
+    sel.innerHTML=`<option value="">${t("selectModelHint")}</option>`+models.map(m=>`<option value="${m}">${m}</option>`).join("");
+    if(current)sel.value=current;
+  } catch(e){alert(t("loadModelsFailed")+e.message);}
+  finally{btn.textContent=t("load");btn.disabled=false;}
+}
+function saveSettings() {
+  const url=document.getElementById("settingUrl").value.trim(), key=document.getElementById("settingKey").value.trim(), model=document.getElementById("settingModel").value;
+  if(!model){alert(t("selectModelFirst"));return;}
+  localStorage.setItem("llm_url",url); localStorage.setItem("llm_key",key); localStorage.setItem("llm_model",model);
+  closeSettings(); updateChatReady();
+}
+
+// ── Sidebar resize ────────────────────────────────────────────────────────────
+function initSidebarResize() {
+  const handle = document.getElementById("sidebarResizeHandle");
+  const sidebar = document.getElementById("chatSidebar");
+  let startX, startWidth;
+  const stored = parseFloat(localStorage.getItem("v3sidebarWidthFraction"));
+  let widthFraction = isNaN(stored) ? null : stored;
+
+  function showResetBtn(visible) {
+    const btn = document.getElementById("resetSizeBtn");
+    if (btn) btn.style.display = visible ? "" : "none";
+  }
+  function applyFraction() {
+    if (widthFraction !== null) {
+      const minW = window.innerWidth * 0.15, maxW = window.innerWidth * 0.50;
+      sidebar.style.width = Math.min(maxW, Math.max(minW, widthFraction * window.innerWidth)) + "px";
+    }
+  }
+  applyFraction();
+  if (widthFraction !== null) showResetBtn(true);
+  window.addEventListener("resize", applyFraction);
+
+  handle.addEventListener("mousedown", e => {
+    startX = e.clientX; startWidth = sidebar.offsetWidth;
+    handle.classList.add("dragging");
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    function onMouseMove(e) {
+      const isLeft = sidebar.classList.contains("sidebar-left");
+      const delta = isLeft ? (e.clientX - startX) : (startX - e.clientX);
+      const minW = window.innerWidth * 0.15, maxW = window.innerWidth * 0.50;
+      const newW = Math.min(maxW, Math.max(minW, startWidth + delta));
+      widthFraction = newW / window.innerWidth;
+      sidebar.style.width = newW + "px";
+    }
+    function onMouseUp() {
+      handle.classList.remove("dragging");
+      document.body.style.cursor = ""; document.body.style.userSelect = "";
+      if (widthFraction !== null) localStorage.setItem("v3sidebarWidthFraction", widthFraction);
+      showResetBtn(true);
+      requestAnimationFrame(() => { Object.values(charts).forEach(c => c.resize()); });
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    e.preventDefault();
+  });
+}
+function resetSidebarSize() {
+  localStorage.removeItem("v3sidebarWidthFraction");
+  document.getElementById("chatSidebar").style.width = "";
+  document.getElementById("resetSizeBtn").style.display = "none";
+  requestAnimationFrame(() => { Object.values(charts).forEach(c => c.resize()); });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function init() {
+  // Default date range: last 90 days
+  const to=new Date(), from=new Date(); from.setDate(from.getDate()-90);
+  document.getElementById("toDate").value   = toLocalDate(to);
+  document.getElementById("fromDate").value = toLocalDate(from);
+
+  // Restore theme button state
+  const savedTheme = localStorage.getItem("v3theme") || "sap_horizon";
+  const themeIdMap = {sap_horizon:"themeHorizon",sap_horizon_dark:"themeHorizonDark",sap_horizon_hcb:"themeHCB"};
+  document.getElementById(themeIdMap[savedTheme])?.classList.add("active");
+
+  // Apply saved theme via CSS link swap if different from default
+  if (savedTheme !== "sap_horizon") {
+    const base = "https://sdk.openui5.org/1.120.17/resources";
+    document.getElementById("ui5ThemeLink").href  = `${base}/sap/ui/core/themes/${savedTheme}/library.css`;
+    document.getElementById("ui5ThemeLinkM").href = `${base}/sap/m/themes/${savedTheme}/library.css`;
+  }
+
+  // Close dropdowns on outside click
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#themeMenuWrap")) document.getElementById("themeDropdown").style.display="none";
+    if (!e.target.closest(".exportWrap")) document.getElementById("exportDropdown").style.display="none";
+    if (!e.target.closest("#settingsModal")&&!e.target.closest(".sidebarBtn")) {
+      // don't auto-close settings modal
+    }
+  });
+
+  // Ctrl+Enter to send chat
+  document.getElementById("chatInput").addEventListener("keydown", e => {
+    if (e.key==="Enter"&&e.ctrlKey) sendChat();
+  });
+
+  applyLang();
+  updateChatReady();
+  initSidebarResize();
+  loadAll();
+})();
+</script>
+</body>
+</html>

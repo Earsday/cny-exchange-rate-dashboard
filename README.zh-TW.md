@@ -17,7 +17,7 @@
 - **AI 對話側邊欄** —— 基於自架 LiteLLM 代理，針對目前顯示資料提問分析；支援左右移動和拖曳調整寬度
 - **主題切換** —— 兩套 UI 各提供多種視覺主題，偏好持久儲存
 - **三語介面** —— English、简体中文、繁體中文自由切換
-- **兩套 UI** —— 經典介面（`/`）與終端介面（`/v2`），可相互導覽切換
+- **三套 UI** —— 經典介面（`/`）、終端介面（`/v2`）與 Fiori 介面（`/v3`），可相互導覽切換
 - **無需建置** —— 原生 JS + CDN 引入的 Chart.js
 
 ## 截圖
@@ -51,6 +51,7 @@ python launch.py
 uvicorn app:app --reload
 # 開啟 http://localhost:8000
 # 終端介面：http://localhost:8000/v2
+# Fiori 介面：http://localhost:8000/v3
 ```
 
 ## 資料採集
@@ -87,7 +88,7 @@ AI 對話側邊欄需要搭配自架的 [LiteLLM 代理](https://docs.litellm.ai
 | 人民幣兌出 | 人民幣 -> 日元、韓元、新台幣、印度盧比、盧布、港幣、烏克蘭格里夫納 |
 | 加密貨幣 | BTC -> 美元、人民幣、歐元 |
 
-如需新增貨幣對，請更新 `collect.py` 中的 `PAIRS`，並在 `templates/index.html` / `static/charts.js`（經典介面）和 `templates/index-v2.html` / `static/charts-v2.js`（終端介面）中新增對應的圖表卡片。
+如需新增貨幣對，請更新 `collect.py` 中的 `PAIRS`，並在 `templates/index.html` / `static/charts.js`（經典介面）、`templates/index-v2.html` / `static/charts-v2.js`（終端介面）和 `templates/index-v3.html`（Fiori 介面）中新增對應的圖表卡片。
 
 ## 專案結構
 
@@ -99,6 +100,7 @@ launch.py             # 啟動服務並開啟瀏覽器
 templates/
   index.html          # 經典介面 UI
   index-v2.html       # 終端介面 UI
+  index-v3.html       # Fiori 介面 UI（自包含）
 static/
   charts.js           # 經典介面：圖表邏輯、國際化、AI 對話
   charts-v2.js        # 終端介面：圖表邏輯、國際化、AI 對話
