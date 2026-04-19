@@ -137,7 +137,7 @@
       color: var(--sapTile_TitleTextColor, #1d2d3e);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .chartCanvasWrap { position: relative; height: 180px; }
+    .chartCanvasWrap { position: relative; }
     .chartCanvasWrap canvas { display: block; }
 
     /* AI Chat sidebar */
@@ -768,7 +768,7 @@ Chart.register(minMaxPlugin);
 
 // ── Chart rendering ───────────────────────────────────────────────────────────
 const chartOptions = () => ({
-  responsive: true, maintainAspectRatio: false, animation: false,
+  responsive: true, maintainAspectRatio: true, aspectRatio: 1.618, animation: false,
   interaction: { mode:"index", intersect:false },
   plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+": "+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(4):"N/A") }}},
   scales: {

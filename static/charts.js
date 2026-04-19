@@ -357,6 +357,7 @@ Chart.register(minMaxPlugin);
 
 const chartOptions = {
   responsive: true,
+  aspectRatio: 1.618,
   interaction: {
     mode: "index",
     intersect: false,

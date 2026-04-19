@@ -375,6 +375,7 @@ Chart.defaults.backgroundColor = V2_COLORS.bg;
 
 const chartOptions = {
   responsive: true,
+  aspectRatio: 1.618,
   interaction: {
     mode: "index",
     intersect: false,
