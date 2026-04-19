@@ -805,16 +805,38 @@ function renderChart(canvasId, label, apiData, color) {
   });
 }
 
+function mergedLegendHover(chart, hoveredIndex) {
+  chart.data.datasets.forEach((ds, i) => {
+    ds.borderWidth = i === hoveredIndex ? 3 : 1;
+    ds.borderColor = i === hoveredIndex
+      ? chart.data.datasets[i]._origColor
+      : chart.data.datasets[i]._origColor + "40";
+  });
+  chart.update("none");
+}
+
+function mergedLegendLeave(chart) {
+  chart.data.datasets.forEach(ds => {
+    ds.borderWidth = 1.5;
+    ds.borderColor = ds._origColor;
+  });
+  chart.update("none");
+}
+
 function renderMergedChart(canvasId, datasets) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
   const labels = (datasets[0]?.data?.data||[]).map(r=>r.date);
   const opts = chartOptions();
-  opts.plugins.legend = { display:true, position:"top", labels:{boxWidth:12,font:{size:11}} };
+  opts.plugins.legend = {
+    display: true, position: "top", labels: {boxWidth:12, font:{size:11}},
+    onHover: (e, item, legend) => mergedLegendHover(legend.chart, item.datasetIndex),
+    onLeave: (e, item, legend) => mergedLegendLeave(legend.chart),
+  };
   charts[canvasId] = new Chart(canvas, {
     type:"line",
-    data:{ labels, datasets: datasets.map(ds=>({ label:ds.label, data:(ds.data.data||[]).map(r=>r.rate), borderColor:ds.color, borderWidth:1.5, pointRadius:0, tension:0.1 })) },
+    data:{ labels, datasets: datasets.map(ds=>({ label:ds.label, data:(ds.data.data||[]).map(r=>r.rate), borderColor:ds.color, _origColor:ds.color, borderWidth:1.5, pointRadius:0, tension:0.1 })) },
     options: opts
   });
 }

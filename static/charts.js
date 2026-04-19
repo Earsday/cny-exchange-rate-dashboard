@@ -425,6 +425,24 @@ function renderChart(canvasId, noDataId, label, data, color) {
   });
 }
 
+function mergedLegendHover(chart, hoveredIndex) {
+  chart.data.datasets.forEach((ds, i) => {
+    ds.borderWidth = i === hoveredIndex ? 3 : 1;
+    ds.borderColor = i === hoveredIndex
+      ? chart.data.datasets[i]._origColor
+      : chart.data.datasets[i]._origColor + "40";
+  });
+  chart.update("none");
+}
+
+function mergedLegendLeave(chart) {
+  chart.data.datasets.forEach(ds => {
+    ds.borderWidth = 2;
+    ds.borderColor = ds._origColor;
+  });
+  chart.update("none");
+}
+
 function renderMergedChart(canvasId, datasets) {
   if (charts[canvasId]) {
     charts[canvasId].destroy();
@@ -451,6 +469,7 @@ function renderMergedChart(canvasId, datasets) {
         label: d.label,
         data: d.data ? d.data.map(r => r.rate) : [],
         borderColor: d.color,
+        _origColor: d.color,
         backgroundColor: d.color + "22",
         borderWidth: 2,
         pointRadius,
@@ -458,7 +477,18 @@ function renderMergedChart(canvasId, datasets) {
         tension: 0.3,
       }))
     },
-    options: { ...chartOptions, plugins: { ...chartOptions.plugins, legend: { display: true, position: "top" } } }
+    options: {
+      ...chartOptions,
+      plugins: {
+        ...chartOptions.plugins,
+        legend: {
+          display: true,
+          position: "top",
+          onHover: (e, item, legend) => mergedLegendHover(legend.chart, item.datasetIndex),
+          onLeave: (e, item, legend) => mergedLegendLeave(legend.chart),
+        }
+      }
+    }
   });
 }
 
