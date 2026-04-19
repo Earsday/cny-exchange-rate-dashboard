@@ -43,6 +43,8 @@ The dashboard has two display modes toggled by the "Merged View" button:
 
 Mode state is held in `mergedMode` (bool) in `charts.js`. `renderChart()` handles single-line charts; `renderMergedChart()` handles multi-dataset charts with legend enabled.
 
+The active mode is reflected in the URL hash (`#merged` / `#separate`) so refreshing the page restores the correct view. `toggleMode()` writes the hash; the init block reads it on load.
+
 ## Controls Bar Features
 
 - **Quick-range buttons** — three groups: "All" (fetches min/max from `/api/date-range`); "In past" rolling windows (7D/1M/3M/6M/1Y); "Since" calendar-anchored ranges (This/Last week/month/year — all end at today)
@@ -56,6 +58,8 @@ All date helpers use `toLocalDate()` (local timezone) instead of `toISOString()`
 ## Chart Features
 
 - Custom Chart.js plugin `minMaxPlugin` draws green/red badge labels at the max/min points. Badge positions are clamped within `chart.chartArea` and flip above/below if they would overflow.
+- Custom Chart.js plugin `lineGlowPlugin` applies a canvas shadow glow to the hovered dataset in merged charts. Activated by setting `dataset._glowing = true` in the legend `onHover` callback and cleared in `onLeave`. Other datasets are unaffected.
+- All charts use `aspectRatio: 1.618` (golden ratio) for consistent proportions across all three UIs.
 - `CHART_META` map (top of `charts.js`) holds `label` (English), `labelZh` (Simplified Chinese), and `labelZht` (Traditional Chinese) for all 22 chart IDs (19 separate + 3 merged). `populateCheckboxes()` picks the correct label based on `currentLang` and preserves existing checkbox states on re-render. `applyLang()` calls `populateCheckboxes()` so labels update immediately on language switch.
 - Charts support drag-and-drop reordering within the grid — cards swap DOM positions; Chart.js instances remain attached to their canvases so no re-render is needed. `initDragAndDrop()` clones each card to clear stale listeners, restores live canvases, then re-attaches listeners. Uses `dragenter`/`dragleave` with an enter-counter to handle child-element false-leaves. Card order is persisted to `localStorage` (`chartOrder_separate` / `chartOrder_merged`) and restored on load. A **"Reset order"** button appears in the controls bar when a custom order is active.
 - AI chat responses are rendered as markdown via the `marked` library (CDN).
@@ -79,7 +83,7 @@ Both UIs support multiple visual themes, selectable from a picker in the title b
 
 - **Classic UI** (`v1theme`): Classic Blue (default), Midnight, Rose. Implemented via CSS custom properties on `:root` with `body.theme-midnight` / `body.theme-rose` overrides. Chart.js colors updated via `applyV1ChartTheme(name)`.
 - **Terminal UI** (`v2theme`): Amber Terminal (default), Arctic, Emerald Night. Same CSS variable approach with `body.theme-arctic` / `body.theme-emerald`. Chart.js colors updated via `applyThemeToCharts(name)`.
-- **Fiori UI** (`v3theme`): SAP Horizon (default), Morning Horizon (dark), High Contrast Black. Theme switching swaps two `<link>` tag `href` values pointing to the corresponding SAP Horizon CSS on the OpenUI5 CDN.
+- **Fiori UI** (`v3theme`): SAP Horizon (default), Morning Horizon (dark), High Contrast Black. Theme switching swaps two `<link>` tag `href` values pointing to the corresponding SAP Horizon CSS on the OpenUI5 CDN (`sdk.openui5.org/resources/...` — no version pin, always resolves to latest).
 
 Chart line colours intentionally avoid red and green families (reserved for min/max badge labels from `minMaxPlugin`).
 
