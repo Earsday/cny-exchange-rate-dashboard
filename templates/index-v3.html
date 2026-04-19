@@ -7,9 +7,9 @@
 
   <!-- SAP Fiori Horizon theme CSS tokens only (no full UI5 runtime needed) -->
   <link id="ui5ThemeLink" rel="stylesheet"
-    href="https://sdk.openui5.org/1.120.17/resources/sap/ui/core/themes/sap_horizon/library.css"/>
+    href="https://sdk.openui5.org/resources/sap/ui/core/themes/sap_horizon/library.css"/>
   <link id="ui5ThemeLinkM" rel="stylesheet"
-    href="https://sdk.openui5.org/1.120.17/resources/sap/m/themes/sap_horizon/library.css"/>
+    href="https://sdk.openui5.org/resources/sap/m/themes/sap_horizon/library.css"/>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
@@ -85,9 +85,14 @@
     }
     .ctrlBtnSuccess {
       background: var(--sapButton_Accept_Background, #107e3e);
-      color: #fff; border-color: var(--sapButton_Accept_Background, #107e3e);
+      color: var(--sapButton_Accept_TextColor, #fff);
+      border-color: var(--sapButton_Accept_BorderColor, #107e3e);
+      font-weight: 600;
     }
-    .ctrlBtnSuccess:hover { filter: brightness(1.1); }
+    .ctrlBtnSuccess:hover {
+      background: var(--sapButton_Accept_Hover_Background, #0d6b34);
+      border-color: var(--sapButton_Accept_Hover_BorderColor, #0d6b34);
+    }
     .ctrlBtnDanger {
       background: var(--sapButton_Reject_Background, #bb0000);
       color: #fff; border-color: #bb0000;
@@ -205,6 +210,7 @@
     .checkLabel {
       display: flex; align-items: center; gap:4px; font-size:11px;
       background: var(--sapBaseColor,#fff); border:1px solid var(--sapGroup_TitleBorderColor,#d9d9d9);
+      color: var(--sapTextColor,#1d2d3e);
       border-radius:4px; padding:2px 6px; cursor:pointer; white-space:nowrap;
     }
     #chatInputArea {
@@ -641,6 +647,7 @@ function setCols(n) {
 // ── View toggle ───────────────────────────────────────────────────────────────
 function toggleMode() {
   mergedMode = !mergedMode;
+  location.hash = mergedMode ? "merged" : "separate";
   document.getElementById("separateGrid").style.display = mergedMode ? "none" : "flex";
   document.getElementById("mergedGrid").style.display   = mergedMode ? "flex" : "none";
   document.getElementById("toggleMode").textContent = t(mergedMode ? "separateView" : "mergedView");
@@ -727,7 +734,7 @@ function setTheme(name) {
   const idMap = { sap_horizon:"themeHorizon", sap_horizon_dark:"themeHorizonDark", sap_horizon_hcb:"themeHCB" };
   document.getElementById(idMap[name])?.classList.add("active");
   // Swap the CSS theme links directly (no UI5 runtime needed)
-  const base = "https://sdk.openui5.org/1.120.17/resources";
+  const base = "https://sdk.openui5.org/resources";
   document.getElementById("ui5ThemeLink").href  = `${base}/sap/ui/core/themes/${name}/library.css`;
   document.getElementById("ui5ThemeLinkM").href = `${base}/sap/m/themes/${name}/library.css`;
 }
@@ -765,6 +772,42 @@ const minMaxPlugin = {
   }
 };
 Chart.register(minMaxPlugin);
+
+const lineGlowPlugin = {
+  id: "lineGlow",
+  beforeDatasetDraw(chart, args) {
+    if (!chart.data.datasets[args.index]._glowing) return;
+    const color = chart.data.datasets[args.index]._origColor || chart.data.datasets[args.index].borderColor;
+    chart.ctx.save();
+    chart.ctx.shadowBlur = 12;
+    chart.ctx.shadowColor = color;
+  },
+  afterDatasetDraw(chart, args) {
+    if (!chart.data.datasets[args.index]._glowing) return;
+    chart.ctx.restore();
+  },
+};
+Chart.register(lineGlowPlugin);
+
+const verticalLinePlugin = {
+  id: "verticalLine",
+  afterDraw(chart) {
+    if (!chart.tooltip?._active?.length) return;
+    const ctx = chart.ctx;
+    const x = chart.tooltip._active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = chart.options.scales.x.ticks.color || "rgba(100,100,100,0.6)";
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+Chart.register(verticalLinePlugin);
 
 // ── Chart rendering ───────────────────────────────────────────────────────────
 const chartOptions = () => ({
@@ -807,14 +850,15 @@ function renderChart(canvasId, label, apiData, color) {
 
 function mergedLegendHover(chart, hoveredIndex) {
   const ds = chart.data.datasets[hoveredIndex];
+  ds._glowing = true;
   ds.borderWidth = 3;
   chart.update("none");
 }
 
 function mergedLegendLeave(chart) {
   chart.data.datasets.forEach(ds => {
+    ds._glowing = false;
     ds.borderWidth = 1.5;
-    ds.borderColor = ds._origColor;
   });
   chart.update("none");
 }
@@ -1087,7 +1131,7 @@ function resetSidebarSize() {
 
   // Apply saved theme via CSS link swap if different from default
   if (savedTheme !== "sap_horizon") {
-    const base = "https://sdk.openui5.org/1.120.17/resources";
+    const base = "https://sdk.openui5.org/resources";
     document.getElementById("ui5ThemeLink").href  = `${base}/sap/ui/core/themes/${savedTheme}/library.css`;
     document.getElementById("ui5ThemeLinkM").href = `${base}/sap/m/themes/${savedTheme}/library.css`;
   }
@@ -1109,6 +1153,12 @@ function resetSidebarSize() {
   applyLang();
   updateChatReady();
   initSidebarResize();
+  if (location.hash === "#merged") {
+    mergedMode = true;
+    document.getElementById("separateGrid").style.display = "none";
+    document.getElementById("mergedGrid").style.display = "flex";
+    document.getElementById("toggleMode").textContent = t("separateView");
+  }
   loadAll();
 })();
 </script>

@@ -355,6 +355,42 @@ const minMaxPlugin = {
 
 Chart.register(minMaxPlugin);
 
+const lineGlowPlugin = {
+  id: "lineGlow",
+  beforeDatasetDraw(chart, args) {
+    if (!chart.data.datasets[args.index]._glowing) return;
+    const color = chart.data.datasets[args.index]._origColor || chart.data.datasets[args.index].borderColor;
+    chart.ctx.save();
+    chart.ctx.shadowBlur = 12;
+    chart.ctx.shadowColor = color;
+  },
+  afterDatasetDraw(chart, args) {
+    if (!chart.data.datasets[args.index]._glowing) return;
+    chart.ctx.restore();
+  },
+};
+Chart.register(lineGlowPlugin);
+
+const verticalLinePlugin = {
+  id: "verticalLine",
+  afterDraw(chart) {
+    if (!chart.tooltip?._active?.length) return;
+    const ctx = chart.ctx;
+    const x = chart.tooltip._active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = chart.options.scales.x.ticks.color || "rgba(100,100,100,0.6)";
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+Chart.register(verticalLinePlugin);
+
 const chartOptions = {
   responsive: true,
   aspectRatio: 1.618,
@@ -427,14 +463,15 @@ function renderChart(canvasId, noDataId, label, data, color) {
 
 function mergedLegendHover(chart, hoveredIndex) {
   const ds = chart.data.datasets[hoveredIndex];
+  ds._glowing = true;
   ds.borderWidth = 3;
   chart.update("none");
 }
 
 function mergedLegendLeave(chart) {
   chart.data.datasets.forEach(ds => {
+    ds._glowing = false;
     ds.borderWidth = 2;
-    ds.borderColor = ds._origColor;
   });
   chart.update("none");
 }
@@ -620,6 +657,7 @@ function setCols(n) {
 
 function toggleMode() {
   mergedMode = !mergedMode;
+  location.hash = mergedMode ? "merged" : "separate";
   document.getElementById("separateGrid").style.display = mergedMode ? "none" : "grid";
   document.getElementById("mergedGrid").style.display = mergedMode ? "grid" : "none";
   document.getElementById("toggleMode").textContent = mergedMode ? t("separateView") : t("mergedView");
@@ -1152,4 +1190,10 @@ document.addEventListener("click", e => {
   if (document.getElementById("themeMenu") && !document.getElementById("themeMenu").contains(e.target))
     document.getElementById("themeDropdown1").style.display = "none";
 });
+if (location.hash === "#merged") {
+  mergedMode = true;
+  document.getElementById("separateGrid").style.display = "none";
+  document.getElementById("mergedGrid").style.display = "grid";
+  document.getElementById("toggleMode").textContent = t("separateView");
+}
 loadAll();
