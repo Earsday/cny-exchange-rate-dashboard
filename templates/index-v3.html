@@ -431,6 +431,7 @@ const I18N = {
     resetOrder: "Reset order", resetSize: "Reset size",
     classicUi: "Classic UI", terminalUi: "Terminal UI",
     theme: "Theme ▾",
+    backendError: "Cannot connect to server. Is the backend running?",
     chartGBPCNY:"GBP -> CNY", chartEURCNY:"EUR -> CNY", chartUSDCNY:"USD -> CNY",
     chartGBPEUR:"GBP -> EUR", chartGBPUSD:"GBP -> USD", chartEURUSD:"EUR -> USD",
     chartCNYJPY:"CNY -> JPY", chartCNYKRW:"CNY -> KRW", chartCNYTWD:"CNY -> TWD",
@@ -471,6 +472,7 @@ const I18N = {
     resetOrder: "重置顺序", resetSize: "重置大小",
     classicUi: "经典界面", terminalUi: "终端界面",
     theme: "主题 ▾",
+    backendError: "无法连接到服务器，后端是否正在运行？",
     chartGBPCNY:"英镑 -> 人民币", chartEURCNY:"欧元 -> 人民币", chartUSDCNY:"美元 -> 人民币",
     chartGBPEUR:"英镑 -> 欧元", chartGBPUSD:"英镑 -> 美元", chartEURUSD:"欧元 -> 美元",
     chartCNYJPY:"人民币 -> 日元", chartCNYKRW:"人民币 -> 韩元", chartCNYTWD:"人民币 -> 新台币",
@@ -511,6 +513,7 @@ const I18N = {
     resetOrder: "重置順序", resetSize: "重置大小",
     classicUi: "經典介面", terminalUi: "終端介面",
     theme: "主題 ▾",
+    backendError: "無法連接到伺服器，後端是否正在執行？",
     chartGBPCNY:"英鎊 -> 人民幣", chartEURCNY:"歐元 -> 人民幣", chartUSDCNY:"美元 -> 人民幣",
     chartGBPEUR:"英鎊 -> 歐元", chartGBPUSD:"英鎊 -> 美元", chartEURUSD:"歐元 -> 美元",
     chartCNYJPY:"人民幣 -> 日圓", chartCNYKRW:"人民幣 -> 韓元", chartCNYTWD:"人民幣 -> 新台幣",
@@ -664,11 +667,13 @@ async function updateData() {
   try {
     const res = await fetch("/api/collect", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({from_date: document.getElementById("fromDate").value || null}) });
     const { ok } = await res.json();
+    if (ok) document.getElementById("backendErrorBanner")?.remove();
     btn.textContent = ok ? t("upToDate") : t("failed");
     btn.className = ok ? "ctrlBtn ctrlBtnSuccess" : "ctrlBtn ctrlBtnDanger";
     if (ok) loadAll();
   } catch(e) {
     btn.textContent = t("failed"); btn.className = "ctrlBtn ctrlBtnDanger";
+    showBackendError();
   } finally {
     setTimeout(() => { btn.textContent = t("updateOfflineData"); btn.className = "ctrlBtn ctrlBtnSuccess"; btn.disabled = false; }, 2500);
   }
@@ -882,6 +887,22 @@ function renderMergedChart(canvasId, datasets) {
 }
 
 // ── Load all ──────────────────────────────────────────────────────────────────
+function showBackendError() {
+  if (document.getElementById("backendErrorBanner")) return;
+  const banner = document.createElement("div");
+  banner.id = "backendErrorBanner";
+  banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.3)";
+  const msg = document.createElement("span");
+  msg.style.flex = "1";
+  msg.textContent = t("backendError");
+  const close = document.createElement("button");
+  close.textContent = "✕";
+  close.style.cssText = "background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;padding:0 4px;line-height:1";
+  close.onclick = () => banner.remove();
+  banner.append(msg, close);
+  document.body.prepend(banner);
+}
+
 async function loadAll() {
   if (typeof Chart === "undefined") {
     document.getElementById("separateGrid").innerHTML = "<p style='padding:16px;color:red'>Chart.js failed to load. Check your internet connection.</p>";
@@ -924,9 +945,10 @@ async function loadAll() {
       restoreCardOrder();
     }
     populateCheckboxes();
+    document.getElementById("backendErrorBanner")?.remove();
   } catch(e) {
     console.error("loadAll failed:", e);
-    document.getElementById("separateGrid").innerHTML = `<p style='padding:16px;color:red'>Error: ${e.message}</p>`;
+    showBackendError();
   }
 }
 

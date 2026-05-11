@@ -46,6 +46,7 @@ const I18N = {
     resetOrder: "Reset order", resetSize: "Reset size",
     terminalUi: "Terminal UI →", fioriUi: "Fiori UI →",
     theme: "Theme ▾", themeDefault: "Classic Blue", themeMidnight: "Midnight", themeRose: "Rose",
+    backendError: "Cannot connect to server. Is the backend running?",
   },
   zh: {
     title: "人民币汇率仪表盘",
@@ -89,6 +90,7 @@ const I18N = {
     resetOrder: "重置顺序", resetSize: "重置大小",
     terminalUi: "终端界面 →", fioriUi: "Fiori 界面 →",
     theme: "主题 ▾", themeDefault: "经典蓝", themeMidnight: "暗夜", themeRose: "玫瑰",
+    backendError: "无法连接到服务器，后端是否正在运行？",
   },
   zht: {
     title: "人民幣匯率儀表板",
@@ -132,6 +134,7 @@ const I18N = {
     resetOrder: "重置順序", resetSize: "重置大小",
     terminalUi: "終端介面 →", fioriUi: "Fiori 介面 →",
     theme: "主題 ▾", themeDefault: "經典藍", themeMidnight: "暗夜", themeRose: "玫瑰",
+    backendError: "無法連接到伺服器，後端是否正在執行？",
   }
 };
 
@@ -541,18 +544,19 @@ async function updateData() {
       body: JSON.stringify({ from_date: fromDate }),
     });
     ({ ok } = await res.json());
+    if (ok) document.getElementById("backendErrorBanner")?.remove();
   } catch (e) {
     ok = false;
-  } finally {
-    btn.classList.remove("btn-updating");
-    btn.textContent = ok ? t("upToDate") : t("failed");
-    btn.style.background = ok ? "#16a34a" : "#dc2626";
-    setTimeout(() => {
-      btn.textContent = t("keepUpToDate");
-      btn.style.background = "#16a34a";
-      btn.disabled = false;
-    }, 2000);
+    showBackendError();
   }
+  btn.classList.remove("btn-updating");
+  btn.textContent = ok ? t("upToDate") : t("failed");
+  btn.style.background = ok ? "#16a34a" : "#dc2626";
+  setTimeout(() => {
+    btn.textContent = t("keepUpToDate");
+    btn.style.background = "#16a34a";
+    btn.disabled = false;
+  }, 2000);
   if (ok) loadAll();
 }
 
@@ -664,6 +668,22 @@ function toggleMode() {
   loadAll();
 }
 
+function showBackendError() {
+  if (document.getElementById("backendErrorBanner")) return;
+  const banner = document.createElement("div");
+  banner.id = "backendErrorBanner";
+  banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;font-size:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.3)";
+  const msg = document.createElement("span");
+  msg.style.flex = "1";
+  msg.textContent = t("backendError");
+  const close = document.createElement("button");
+  close.textContent = "✕";
+  close.style.cssText = "background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;padding:0 4px;line-height:1";
+  close.onclick = () => banner.remove();
+  banner.append(msg, close);
+  document.body.prepend(banner);
+}
+
 async function loadAll() {
   const refreshBtn = document.getElementById("refreshBtn");
   if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = t("loadingData"); }
@@ -692,6 +712,7 @@ async function loadAll() {
     ]);
   } catch (e) {
     console.error("Failed to load exchange rates:", e);
+    showBackendError();
     return;
   } finally {
     if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.setAttribute("data-i18n", "refresh"); refreshBtn.textContent = t("refresh"); }
@@ -740,6 +761,7 @@ async function loadAll() {
   populateCheckboxes();
   initDragAndDrop();
   restoreCardOrder();
+  document.getElementById("backendErrorBanner")?.remove();
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
