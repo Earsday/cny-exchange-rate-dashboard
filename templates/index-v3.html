@@ -291,9 +291,11 @@
   <!-- Controls bar -->
   <div id="controlsBar">
     <!-- Date range -->
-    <input type="date" id="fromDate" onchange="loadAll()">
+    <span class="ctrlLabel" data-i18n="from">From</span>
+    <input type="date" id="fromDate" aria-label="From date" title="From date" onchange="loadAll()">
     <span class="ctrlLabel">–</span>
-    <input type="date" id="toDate" onchange="loadAll()">
+    <span class="ctrlLabel" data-i18n="to">To</span>
+    <input type="date" id="toDate" aria-label="To date" title="To date" onchange="loadAll()">
     <button class="ctrlBtn" onclick="loadAll()" id="refreshBtn" data-i18n="refresh">Refresh</button>
     <div class="ctrlSep"></div>
     <!-- Quick ranges -->
@@ -357,7 +359,8 @@
       </div>
       <div id="chatMessages"></div>
       <div id="chatInputArea">
-        <textarea id="chatInput" rows="2" disabled data-i18n-placeholder="chatPlaceholderNotReady"></textarea>
+        <label for="chatInput" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">AI chat input</label>
+        <textarea id="chatInput" rows="2" disabled data-i18n-placeholder="chatPlaceholderNotReady" aria-label="AI chat input"></textarea>
         <button id="chatSendBtn" onclick="sendChat()" disabled data-i18n="send">Send</button>
       </div>
     </div>
@@ -369,28 +372,29 @@
 
 <!-- Settings modal -->
 <div id="settingsModal">
-  <div id="settingsBox">
+  <form id="settingsBox" onsubmit="event.preventDefault(); saveSettings()">
     <h2 data-i18n="aiSettings">AI Assistant Settings</h2>
+    <input type="text" name="llmUsername" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0" />
     <div class="settingsRow">
-      <label data-i18n="baseUrl">LiteLLM Base URL</label>
-      <input id="settingUrl" type="url" placeholder="http://localhost:6655/litellm"/>
+      <label for="settingUrl" data-i18n="baseUrl">LiteLLM Base URL</label>
+      <input id="settingUrl" type="url" placeholder="http://localhost:6655/litellm" autocomplete="url"/>
     </div>
     <div class="settingsRow">
-      <label data-i18n="apiKey">API Key</label>
-      <input id="settingKey" type="password"/>
+      <label for="settingKey" data-i18n="apiKey">API Key</label>
+      <input id="settingKey" type="password" autocomplete="current-password"/>
     </div>
     <div class="settingsRow">
-      <label data-i18n="model">Model</label>
+      <label for="settingModel" data-i18n="model">Model</label>
       <div class="loadRow">
         <select id="settingModel"><option value="" data-i18n="selectModelHint">-- select a model --</option></select>
-        <button class="btnSecondary" id="loadModelsBtn" onclick="loadModels()" data-i18n="load">Load</button>
+        <button type="button" class="btnSecondary" id="loadModelsBtn" onclick="loadModels()" data-i18n="load">Load</button>
       </div>
     </div>
     <div class="settingsBtns">
-      <button class="btnSecondary" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
-      <button class="btnPrimary"   onclick="saveSettings()"  data-i18n="save">Save</button>
+      <button type="button" class="btnSecondary" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
+      <button type="submit" class="btnPrimary" data-i18n="save">Save</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <script>
@@ -398,6 +402,7 @@
 const I18N = {
   en: {
     title: "CNY Exchange Rate Dashboard",
+    from: "From (MM/DD/YYYY)", to: "To (MM/DD/YYYY)",
     refresh: "Refresh", all: "All", inPast: "In past", since: "Since",
     thisWeek: "This week", thisMonth: "This month", thisYear: "This year",
     lastWeek: "Last week", lastMonth: "Last month", lastYear: "Last year",
@@ -442,6 +447,7 @@ const I18N = {
   },
   zh: {
     title: "人民币汇率仪表盘",
+    from: "开始（月/日/年）", to: "结束（月/日/年）",
     refresh: "刷新", all: "全部", inPast: "过去", since: "自",
     thisWeek: "本周", thisMonth: "本月", thisYear: "今年",
     lastWeek: "上周", lastMonth: "上月", lastYear: "去年",
@@ -483,6 +489,7 @@ const I18N = {
   },
   zht: {
     title: "人民幣匯率儀表板",
+    from: "開始（月/日/年）", to: "結束（月/日/年）",
     refresh: "重新整理", all: "全部", inPast: "過去", since: "自",
     thisWeek: "本週", thisMonth: "本月", thisYear: "今年",
     lastWeek: "上週", lastMonth: "上月", lastYear: "去年",

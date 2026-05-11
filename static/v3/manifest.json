@@ -1,0 +1,43 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "cny.dashboard",
+    "type": "application",
+    "title": "{{appTitle}}",
+    "description": "CNY Exchange Rate Dashboard",
+    "applicationVersion": { "version": "3.0.0" },
+    "i18n": "i18n/i18n.properties"
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {},
+    "deviceTypes": { "desktop": true, "tablet": true, "phone": true }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "cny.dashboard.view.Main",
+      "type": "XML",
+      "id": "mainView"
+    },
+    "dependencies": {
+      "minUI5Version": "1.65.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.layout": {},
+        "sap.ui.core": {},
+        "sap.f": {},
+        "sap.ui.unified": {}
+      }
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "cny.dashboard.i18n.i18n",
+          "supportedLocales": ["", "zh_CN", "zh_TW"],
+          "fallbackLocale": ""
+        }
+      }
+    }
+  }
+}

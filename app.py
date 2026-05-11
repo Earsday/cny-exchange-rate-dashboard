@@ -7,7 +7,7 @@ Usage:
 """
 
 from fastapi import FastAPI, Query, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from db import init_db, get_rates, get_date_range
@@ -21,6 +21,9 @@ import requests as http_requests
 
 app = FastAPI(title="Currency Tracker")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+_BASE_DIR = Path(__file__).parent
+_FAVICON_PATH = _BASE_DIR / "pictures" / "CNY Exchange Rate Dashboard - Merged View.en-US.png"
 
 _access_log = logging.getLogger("app.access")
 
@@ -107,13 +110,18 @@ def dashboard_v2():
 
 @app.get("/v3", response_class=HTMLResponse)
 def dashboard_v3():
-    html = (Path(__file__).parent / "templates" / "index-v3.html").read_text(encoding="utf-8")
+    html = (_BASE_DIR / "templates" / "index-v3.html").read_text(encoding="utf-8")
     return HTMLResponse(content=html, media_type="text/html; charset=utf-8")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(_FAVICON_PATH, media_type="image/png")
 
 
 @app.post("/api/collect")
 def collect(body: Dict[str, Any] = {}):
-    collect_script = Path(__file__).parent / "collect.py"
+    collect_script = _BASE_DIR / "collect.py"
     cmd = [sys.executable, str(collect_script), "--backfill"]
     from_date = (body or {}).get("from_date")
     if from_date:
@@ -142,9 +150,12 @@ def chat(body: Dict[str, Any]):
     system_prompt = (
         f"You are a financial data analyst assistant. "
         f"You have access to exchange rate data for the period {from_date} to {to_date}. "
-        f"Currency pairs available: {', '.join(pair_names)}.\n"
+        f"Currency pairs available in this request: {', '.join(pair_names) if pair_names else 'none'}.\n"
         f"Rate data (date:rate):\n" + "\n".join(data_lines) + "\n\n"
-        f"Answer questions about trends, highs/lows, comparisons, and near-future outlook based on the data provided."
+        "Treat the provided rate data as the exact chart context selected by the user. "
+        "If the user asks for a summary, comparison, highs/lows, or trend analysis, answer directly from the provided data. "
+        "Do not ask the user to choose currency pairs unless no rate data was provided or the request truly cannot be answered from the supplied context. "
+        "When the user asks for a one-sentence summary, respond in exactly one sentence."
     )
 
     payload = {

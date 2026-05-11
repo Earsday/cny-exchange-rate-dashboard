@@ -1,0 +1,201 @@
+<mvc:View
+    controllerName="cny.dashboard.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+
+    <Page
+        id="mainPage"
+        showHeader="true"
+        class="cnvPage">
+
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Title text="{i18n>appTitle}" level="H4"/>
+                </contentLeft>
+                <contentMiddle>
+                    <!-- Date range -->
+                    <HBox alignItems="Center" class="sapUiSmallMarginEnd">
+                        <DatePicker
+                            id="fromDatePicker"
+                            placeholder="{i18n>from}"
+                            valueFormat="yyyy-MM-dd"
+                            displayFormat="yyyy-MM-dd"
+                            width="140px"
+                            change="onDateChange"/>
+                        <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
+                        <DatePicker
+                            id="toDatePicker"
+                            placeholder="{i18n>to}"
+                            valueFormat="yyyy-MM-dd"
+                            displayFormat="yyyy-MM-dd"
+                            width="140px"
+                            change="onDateChange"/>
+                        <Button
+                            icon="sap-icon://refresh"
+                            tooltip="{i18n>refresh}"
+                            press="onRefresh"
+                            class="sapUiSmallMarginBegin"/>
+                    </HBox>
+                </contentMiddle>
+                <contentRight>
+                    <!-- Language switcher -->
+                    <SegmentedButton id="langBtn" selectionChange="onLangChange">
+                        <items>
+                            <SegmentedButtonItem id="langEn"  key="en"    text="EN"/>
+                            <SegmentedButtonItem id="langZh"  key="zh_CN" text="简中"/>
+                            <SegmentedButtonItem id="langZht" key="zh_TW" text="繁中"/>
+                        </items>
+                    </SegmentedButton>
+                    <!-- Navigation -->
+                    <Button text="{i18n>classicUi}" press="onNavClassic" class="sapUiSmallMarginBegin" type="Transparent"/>
+                    <Button text="{i18n>terminalUi}" press="onNavTerminal" type="Transparent"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+
+        <!-- Toolbar row -->
+        <subHeader>
+            <Bar>
+                <contentLeft>
+                    <!-- Quick ranges -->
+                    <OverflowToolbar style="Clear">
+                        <Button id="qrAll"       text="{i18n>all}"       press="onSetAll"                    type="Transparent"/>
+                        <ToolbarSeparator/>
+                        <Label text="{i18n>inPast}" class="sapUiSmallMarginEnd"/>
+                        <Button id="qr7"         text="{i18n>7d}"        press="onSetRange" customData:data="7"   type="Transparent"/>
+                        <Button id="qr30"        text="{i18n>1m}"        press="onSetRange" customData:data="30"  type="Transparent"/>
+                        <Button id="qr90"        text="{i18n>3m}"        press="onSetRange" customData:data="90"  type="Transparent" class="rangeActive"/>
+                        <Button id="qr180"       text="{i18n>6m}"        press="onSetRange" customData:data="180" type="Transparent"/>
+                        <Button id="qr365"       text="{i18n>1y}"        press="onSetRange" customData:data="365" type="Transparent"/>
+                        <ToolbarSeparator/>
+                        <Label text="{i18n>since}" class="sapUiSmallMarginEnd"/>
+                        <Button id="qrThisWeek"  text="{i18n>thisWeek}"  press="onSetSince" customData:data="week"      type="Transparent"/>
+                        <Button id="qrThisMonth" text="{i18n>thisMonth}" press="onSetSince" customData:data="month"     type="Transparent"/>
+                        <Button id="qrThisYear"  text="{i18n>thisYear}"  press="onSetSince" customData:data="year"      type="Transparent"/>
+                        <Button id="qrLastWeek"  text="{i18n>lastWeek}"  press="onSetSince" customData:data="lastWeek"  type="Transparent"/>
+                        <Button id="qrLastMonth" text="{i18n>lastMonth}" press="onSetSince" customData:data="lastMonth" type="Transparent"/>
+                        <Button id="qrLastYear"  text="{i18n>lastYear}"  press="onSetSince" customData:data="lastYear"  type="Transparent"/>
+                    </OverflowToolbar>
+                </contentLeft>
+                <contentRight>
+                    <!-- Column picker -->
+                    <SegmentedButton id="colBtn" selectionChange="onColChange">
+                        <items>
+                            <SegmentedButtonItem key="1" text="{i18n>col1}"/>
+                            <SegmentedButtonItem key="2" text="{i18n>col2}"/>
+                            <SegmentedButtonItem key="3" text="{i18n>col3}" selected="true"/>
+                            <SegmentedButtonItem key="4" text="{i18n>col4}"/>
+                        </items>
+                    </SegmentedButton>
+                    <ToolbarSeparator/>
+                    <!-- View toggle -->
+                    <Button id="toggleModeBtn" text="{i18n>mergedView}" press="onToggleMode" type="Transparent"/>
+                    <!-- Reset order (hidden by default) -->
+                    <Button id="resetOrderBtn" text="{i18n>resetOrder}" press="onResetOrder" type="Transparent" visible="false"/>
+                    <ToolbarSeparator/>
+                    <!-- Update offline data -->
+                    <Button id="updateBtn" text="{i18n>updateOfflineData}" press="onUpdateData" type="Success"/>
+                    <!-- Export -->
+                    <MenuButton
+                        id="exportMenuBtn"
+                        text="{i18n>export}"
+                        buttonMode="Split"
+                        useDefaultActionOnly="false">
+                        <menu>
+                            <Menu itemSelected="onExportSelected">
+                                <items>
+                                    <MenuItem id="exportSep" text="{i18n>exportSeparate}" key="separate"/>
+                                    <MenuItem id="exportCom" text="{i18n>exportCombined}" key="combined"/>
+                                </items>
+                            </Menu>
+                        </menu>
+                    </MenuButton>
+                    <!-- AI Chat -->
+                    <Button id="aiChatBtn" text="{i18n>aiChat}" press="onToggleChat" type="Emphasized"/>
+                    <!-- Theme -->
+                    <Button id="themeBtn" icon="sap-icon://palette" tooltip="{i18n>theme}" press="onThemePress" type="Transparent"/>
+                </contentRight>
+            </Bar>
+        </subHeader>
+
+        <!-- Main content area with optional sidebar -->
+        <content>
+            <f:FlexibleColumnLayout id="fcLayout" layout="OneColumn">
+                <f:beginColumnPages>
+                    <!-- Chart grid page -->
+                    <f:FlexibleColumnLayoutSemanticHelper/>
+                </f:beginColumnPages>
+            </f:FlexibleColumnLayout>
+
+            <!-- We use a custom HBox layout instead of FCL for simplicity -->
+            <HBox id="mainArea" width="100%" height="100%" fitContainer="true">
+
+                <!-- Left sidebar (AI chat - conditionally rendered left) -->
+                <VBox id="chatSidebarLeft" visible="false" width="320px" class="chatSidebar">
+                    <customData><core:CustomData key="position" value="left"/></customData>
+                </VBox>
+
+                <!-- Chart area -->
+                <VBox id="chartArea" class="chartArea" growing="true">
+                    <!-- Separate grid -->
+                    <HBox id="separateGrid" wrap="Wrap" class="chartGrid" visible="true"/>
+                    <!-- Merged grid -->
+                    <HBox id="mergedGrid"   wrap="Wrap" class="chartGrid" visible="false"/>
+                </VBox>
+
+                <!-- Right sidebar (AI chat) -->
+                <VBox id="chatSidebarRight" visible="false" width="320px" class="chatSidebar">
+                    <customData><core:CustomData key="position" value="right"/></customData>
+                </VBox>
+
+            </HBox>
+        </content>
+
+    </Page>
+
+    <!-- Settings Dialog (defined here, opened programmatically) -->
+    <Dialog id="settingsDialog" title="{i18n>aiSettings}" contentWidth="400px">
+        <content>
+            <l:VerticalLayout width="100%" class="sapUiContentPadding">
+                <Label text="{i18n>baseUrl}" required="true"/>
+                <Input id="settingUrl" value="{app>/llmUrl}" width="100%" placeholder="http://localhost:6655/litellm"/>
+                <Label text="{i18n>apiKey}" required="true" class="sapUiSmallMarginTop"/>
+                <Input id="settingKey" value="{app>/llmKey}" type="Password" width="100%"/>
+                <Label text="{i18n>model}" required="true" class="sapUiSmallMarginTop"/>
+                <HBox>
+                    <Select id="settingModel" width="240px" forceSelection="false">
+                        <items>
+                            <core:Item key="" text="{i18n>selectModelHint}"/>
+                        </items>
+                    </Select>
+                    <Button id="loadModelsBtn" text="{i18n>load}" press="onLoadModels" class="sapUiSmallMarginBegin"/>
+                </HBox>
+            </l:VerticalLayout>
+        </content>
+        <beginButton>
+            <Button text="{i18n>save}" type="Emphasized" press="onSaveSettings"/>
+        </beginButton>
+        <endButton>
+            <Button text="{i18n>cancel}" press="onCancelSettings"/>
+        </endButton>
+    </Dialog>
+
+    <!-- Theme Popover (opened programmatically) -->
+    <Popover id="themePopover" placement="Bottom" showHeader="false">
+        <content>
+            <List mode="SingleSelectMaster" selectionChange="onThemeSelected">
+                <items>
+                    <StandardListItem title="SAP Horizon"        key="sap_horizon"        type="Active"/>
+                    <StandardListItem title="Morning Horizon"    key="sap_horizon_dark"   type="Active"/>
+                    <StandardListItem title="High Contrast Black" key="sap_horizon_hcb"  type="Active"/>
+                </items>
+            </List>
+        </content>
+    </Popover>
+
+</mvc:View>

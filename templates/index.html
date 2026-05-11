@@ -520,27 +520,28 @@
 
   <!-- Settings Modal -->
   <div id="settingsModal">
-    <div class="settings-card">
+    <form class="settings-card" onsubmit="event.preventDefault(); saveSettings()">
       <h3 data-i18n="aiSettings">AI Assistant Settings</h3>
-      <label><span data-i18n="baseUrl">LiteLLM Base URL</span>
-        <input type="text" id="settingUrl" placeholder="http://localhost:6655/litellm" oninput="updateLoadModelsBtn()" />
+      <input type="text" name="llmUsername" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0" />
+      <label for="settingUrl"><span data-i18n="baseUrl">LiteLLM Base URL</span>
+        <input type="text" id="settingUrl" placeholder="http://localhost:6655/litellm" autocomplete="url" oninput="updateLoadModelsBtn()" />
       </label>
-      <label><span data-i18n="apiKey">API Key</span>
-        <input type="password" id="settingKey" placeholder="sk-..." oninput="updateLoadModelsBtn()" />
+      <label for="settingKey"><span data-i18n="apiKey">API Key</span>
+        <input type="password" id="settingKey" placeholder="sk-..." autocomplete="current-password" oninput="updateLoadModelsBtn()" />
       </label>
-      <label><span data-i18n="model">Model</span>
+      <label for="settingModel"><span data-i18n="model">Model</span>
         <div style="display:flex;gap:6px;align-items:center">
           <select id="settingModel" style="flex:1;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem">
             <option value="" data-i18n="loadModelsHint">-- load models --</option>
           </select>
-          <button id="loadModelsBtn" onclick="loadModels()" disabled style="padding:7px 12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;cursor:pointer;white-space:nowrap" data-i18n="load">Load</button>
+          <button type="button" id="loadModelsBtn" onclick="loadModels()" disabled style="padding:7px 12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:0.85rem;cursor:pointer;white-space:nowrap" data-i18n="load">Load</button>
         </div>
       </label>
       <div class="settings-actions">
-        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
-        <button class="btn-save" onclick="saveSettings()" data-i18n="save">Save</button>
+        <button type="button" class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">Cancel</button>
+        <button type="submit" class="btn-save" data-i18n="save">Save</button>
       </div>
-    </div>
+    </form>
   </div>
 
   <script src="/static/charts.js?ts={{charts_ts}}"></script>
