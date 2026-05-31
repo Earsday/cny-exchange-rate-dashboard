@@ -9,7 +9,7 @@ A self-hosted web dashboard for tracking CNY-centric exchange rates with interac
 ## Features
 
 - **19 currency pairs** tracked daily — GBP/EUR/USD/ILS to CNY, cross rates (GBP/EUR/USD, USD/JPY, USD/TWD), CNY outbound to JPY/KRW/TWD/INR/RUB/HKD/UAH, and BTC cross pairs
-- **Interactive charts** with min/max labels, crosshair tooltips, and drag-and-drop reordering
+- **Interactive charts** with min/max labels, crosshair tooltips, percentage change per chart, per-group highest/lowest highlights, glow-on-hover in merged view, and drag-and-drop reordering
 - **Two display modes** — Separate (19 individual charts) or Merged (3 grouped multi-line charts)
 - **Flexible time ranges** — rolling windows (7D/1M/3M/6M/1Y), calendar-anchored (this/last week/month/year), or all available data
 - **Column layout picker** — 1, 2, 3, or 4 columns
@@ -87,9 +87,9 @@ Credentials are stored in browser `localStorage` only and are never persisted se
 
 | Group | Pairs |
 |---|---|
-| Inbound to CNY | GBP, EUR, USD, ILS -> CNY |
-| Cross rates | GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD |
-| Outbound from CNY | CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH |
+| CNY Inbound | GBP, EUR, USD, ILS -> CNY |
+| CNY Outbound | CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH |
+| Western Cross Rates | GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD |
 | Crypto | BTC -> USD, CNY, EUR |
 
 To add a new pair, update `PAIRS` in `collect.py` and add the corresponding chart card in `templates/index.html` / `static/charts.js` (Classic UI), `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI), and `templates/index-v3.html` (Fiori UI).
