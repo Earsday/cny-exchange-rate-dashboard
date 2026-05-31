@@ -59,7 +59,10 @@ All date helpers use `toLocalDate()` (local timezone) instead of `toISOString()`
 
 - Custom Chart.js plugin `minMaxPlugin` draws green/red badge labels at the max/min points. Badge positions are clamped within `chart.chartArea` and flip above/below if they would overflow.
 - Custom Chart.js plugin `lineGlowPlugin` applies a canvas shadow glow to the hovered dataset in merged charts. Activated by setting `dataset._glowing = true` in the legend `onHover` callback and cleared in `onLeave`. Other datasets are unaffected.
+- Custom Chart.js plugin `verticalLinePlugin` draws a dashed vertical crosshair at the hovered point using `chart.tooltip._active[0].element.x`.
 - All charts use `aspectRatio: 1.618` (golden ratio) for consistent proportions across all three UIs.
+- Each chart title shows the percentage change from the first to the last visible data point (e.g. `+1.23%` in green or `-0.45%` in red), computed by `pctSpan(data)` and appended to the title `<h2>` / `.chartTitle` element.
+- `highlightExtremes()` outlines the highest (green) and lowest (red) percentage titles **per group**. Groups are determined by `.chart-section-divider` / `.chartSectionDivider` elements in the DOM — cards between two dividers form one group.
 - `CHART_META` map (top of `charts.js`) holds `label` (English), `labelZh` (Simplified Chinese), and `labelZht` (Traditional Chinese) for all 22 chart IDs (19 separate + 3 merged). `populateCheckboxes()` picks the correct label based on `currentLang` and preserves existing checkbox states on re-render. `applyLang()` calls `populateCheckboxes()` so labels update immediately on language switch.
 - Charts support drag-and-drop reordering within the grid — cards swap DOM positions; Chart.js instances remain attached to their canvases so no re-render is needed. `initDragAndDrop()` clones each card to clear stale listeners, restores live canvases, then re-attaches listeners. Uses `dragenter`/`dragleave` with an enter-counter to handle child-element false-leaves. Card order is persisted to `localStorage` (`chartOrder_separate` / `chartOrder_merged`) and restored on load. A **"Reset order"** button appears in the controls bar when a custom order is active.
 - AI chat responses are rendered as markdown via the `marked` library (CDN).
@@ -101,11 +104,11 @@ Chart line colours intentionally avoid red and green families (reserved for min/
 
 ## Currency Pairs
 
-The app tracks CNY-centric and other pairs:
+The app tracks CNY-centric and other pairs, organised into 4 groups displayed as labelled sections in the UI:
 
-- Inbound to CNY: GBP, EUR, USD -> CNY; ILS -> CNY
-- Cross rates: GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD
-- Outbound from CNY: CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH
-- Crypto: BTC -> USD, CNY, EUR
+- **CNY Inbound**: GBP, EUR, USD, ILS -> CNY
+- **CNY Outbound**: CNY -> JPY, KRW, TWD, INR, RUB, HKD, UAH
+- **Western Cross Rates**: GBP -> EUR, GBP -> USD, EUR -> USD, USD -> JPY, USD -> TWD
+- **Crypto**: BTC -> USD, CNY, EUR
 
 To add a new pair, update the `PAIRS` list in `collect.py` and add a corresponding chart in `templates/index.html` / `static/charts.js` (Classic UI), `templates/index-v2.html` / `static/charts-v2.js` (Terminal UI), and `templates/index-v3.html` (Fiori UI).
