@@ -12,6 +12,8 @@ const I18N = {
     lastWeek: "Last week", lastMonth: "Last month", lastYear: "Last year",
     col1: "1 col", col2: "2 cols", col3: "3 cols", col4: "4 cols",
     "7d": "7D", "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y",
+    cnyInboundSection: "CNY Inbound",
+    cnyOutboundSection: "CNY Outbound",
     crossRatesSection: "Western Cross Rates",
     cryptoSection: "Crypto",
     mergedView: "Merged View", separateView: "Separate View",
@@ -56,6 +58,8 @@ const I18N = {
     lastWeek: "上周", lastMonth: "上月", lastYear: "去年",
     col1: "1列", col2: "2列", col3: "3列", col4: "4列",
     "7d": "7天", "1m": "1个月", "3m": "3个月", "6m": "6个月", "1y": "1年",
+    cnyInboundSection: "CNY 入境",
+    cnyOutboundSection: "CNY 出境",
     crossRatesSection: "西方货币交叉汇率",
     cryptoSection: "加密货币",
     mergedView: "合并视图", separateView: "分离视图",
@@ -100,6 +104,8 @@ const I18N = {
     lastWeek: "上週", lastMonth: "上月", lastYear: "去年",
     col1: "1欄", col2: "2欄", col3: "3欄", col4: "4欄",
     "7d": "7天", "1m": "1個月", "3m": "3個月", "6m": "6個月", "1y": "1年",
+    cnyInboundSection: "CNY 入境",
+    cnyOutboundSection: "CNY 出境",
     crossRatesSection: "西方貨幣交叉匯率",
     cryptoSection: "加密貨幣",
     mergedView: "合併檢視", separateView: "分離檢視",
@@ -425,6 +431,16 @@ const chartOptions = {
   },
 };
 
+function pctSpan(data) {
+  if (!data || data.length < 2) return "";
+  const first = data[0].rate, last = data[data.length - 1].rate;
+  if (!first) return "";
+  const pct = (last - first) / first * 100;
+  const color = pct >= 0 ? "#16a34a" : "#dc2626";
+  const sign = pct >= 0 ? "+" : "";
+  return `<span style="color:${color};font-size:0.8em;font-weight:normal;margin-left:6px">${sign}${pct.toFixed(2)}%</span>`;
+}
+
 function renderChart(canvasId, noDataId, label, data, color) {
   const canvas = document.getElementById(canvasId);
   const noData = document.getElementById(noDataId);
@@ -437,6 +453,9 @@ function renderChart(canvasId, noDataId, label, data, color) {
 
   canvas.style.display = "block";
   noData.style.display = "none";
+
+  const h2 = canvas.closest(".chart-card")?.querySelector("h2");
+  if (h2) h2.innerHTML = label + pctSpan(data);
 
   const labels = data.map(d => d.date);
   const values = data.map(d => d.rate);
@@ -684,6 +703,47 @@ function showBackendError() {
   document.body.prepend(banner);
 }
 
+function highlightExtremes() {
+  const grid = document.getElementById(mergedMode ? "mergedGrid" : "separateGrid");
+  // Split children into groups separated by .chart-section-divider elements
+  const groups = [];
+  let current = [];
+  [...grid.children].forEach(el => {
+    if (el.classList.contains("chart-section-divider")) {
+      if (current.length) groups.push(current);
+      current = [];
+    } else if (el.classList.contains("chart-card")) {
+      current.push(el);
+    }
+  });
+  if (current.length) groups.push(current);
+
+  groups.forEach(cards => {
+    const entries = cards.map(card => {
+      const span = card.querySelector("h2 span");
+      const pct = span ? parseFloat(span.textContent) : null;
+      return { h2: card.querySelector("h2"), pct };
+    }).filter(e => e.pct !== null && !isNaN(e.pct));
+    if (entries.length < 2) return;
+    const max = Math.max(...entries.map(e => e.pct));
+    const min = Math.min(...entries.map(e => e.pct));
+    entries.forEach(({ h2, pct }) => {
+      h2.style.outline = "";
+      h2.style.borderRadius = "";
+      h2.style.padding = "";
+      if (pct === max) {
+        h2.style.outline = "2px solid #16a34a";
+        h2.style.borderRadius = "4px";
+        h2.style.padding = "2px 4px";
+      } else if (pct === min) {
+        h2.style.outline = "2px solid #dc2626";
+        h2.style.borderRadius = "4px";
+        h2.style.padding = "2px 4px";
+      }
+    });
+  });
+}
+
 async function loadAll() {
   const refreshBtn = document.getElementById("refreshBtn");
   if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = t("loadingData"); }
@@ -762,6 +822,7 @@ async function loadAll() {
   initDragAndDrop();
   restoreCardOrder();
   document.getElementById("backendErrorBanner")?.remove();
+  highlightExtremes();
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────

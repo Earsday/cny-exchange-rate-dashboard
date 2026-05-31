@@ -665,6 +665,9 @@
     <div class="chart-area">
       <div id="separateGrid" class="chart-grid">
 
+        <div class="chart-section-divider" id="cnyInboundDivider">
+          <span data-i18n="cnyInboundSection">CNY Inbound</span>
+        </div>
         <div class="chart-card">
           <h2>GBP → CNY</h2>
           <canvas id="chartGBPCNY"></canvas>
@@ -679,6 +682,14 @@
           <h2>USD → CNY</h2>
           <canvas id="chartUSDCNY"></canvas>
           <div id="noDataUSDCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>ILS → CNY</h2>
+          <canvas id="chartILSCNY"></canvas>
+          <div id="noDataILSCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-section-divider" id="cnyOutboundDivider">
+          <span data-i18n="cnyOutboundSection">CNY Outbound</span>
         </div>
         <div class="chart-card">
           <h2>CNY → JPY</h2>
@@ -715,16 +726,6 @@
           <canvas id="chartCNYUAH"></canvas>
           <div id="noDataCNYUAH" class="no-data" style="display:none" data-i18n="noData">No data</div>
         </div>
-        <div class="chart-card">
-          <h2>ILS → CNY</h2>
-          <canvas id="chartILSCNY"></canvas>
-          <div id="noDataILSCNY" class="no-data" style="display:none" data-i18n="noData">No data</div>
-        </div>
-        <div class="chart-card">
-          <h2>USD → TWD</h2>
-          <canvas id="chartUSDTWD"></canvas>
-          <div id="noDataUSDTWD" class="no-data" style="display:none" data-i18n="noData">No data</div>
-        </div>
 
         <div class="chart-section-divider" id="crossRateDivider">
           <span data-i18n="crossRatesSection">Western Cross Rates</span>
@@ -749,6 +750,11 @@
           <h2>USD → JPY</h2>
           <canvas id="chartUSDJPY"></canvas>
           <div id="noDataUSDJPY" class="no-data" style="display:none" data-i18n="noData">No data</div>
+        </div>
+        <div class="chart-card">
+          <h2>USD → TWD</h2>
+          <canvas id="chartUSDTWD"></canvas>
+          <div id="noDataUSDTWD" class="no-data" style="display:none" data-i18n="noData">No data</div>
         </div>
 
         <div class="chart-section-divider" id="cryptoDivider">
