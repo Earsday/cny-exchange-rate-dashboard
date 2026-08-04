@@ -36,17 +36,30 @@ A self-hosted web dashboard for tracking CNY-centric exchange rates with interac
 - pip packages: `fastapi`, `uvicorn`, `requests`
 
 ```bash
-pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
 ## Quick Start
 
+Using Make (recommended):
+
+```bash
+make setup
+make run
+# if port 8000 is occupied
+make stop
+```
+
+Manual commands:
+
 ```bash
 # 1. Collect historical data (last 90 days)
-python collect.py --backfill
+python3 collect.py --backfill
 
 # 2. Start the server and open the browser
-python launch.py
+python3 launch.py
 ```
 
 Or start the server manually:

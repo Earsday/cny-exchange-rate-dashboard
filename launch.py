@@ -1,13 +1,43 @@
 """
 Launch the Currency Tracker: starts the uvicorn server and opens the browser.
-Run with: python launch.py
+Run with: python3 launch.py
 """
 
 import logging
+import os
+import pathlib
+import sys
 import threading
 import webbrowser
 from datetime import datetime
-import uvicorn
+
+
+def _load_uvicorn():
+    """Load uvicorn, auto-relaunching with .venv when available."""
+    try:
+        import uvicorn  # type: ignore
+        return uvicorn
+    except ModuleNotFoundError:
+        project_root = pathlib.Path(__file__).resolve().parent
+        venv_python = project_root / ".venv" / "bin" / "python"
+        in_venv = sys.prefix != getattr(sys, "base_prefix", sys.prefix)
+
+        if venv_python.exists() and not in_venv:
+            print("uvicorn not found in current interpreter; relaunching with .venv")
+            os.execv(str(venv_python), [str(venv_python), __file__])
+
+        raise SystemExit(
+            "Missing dependency: uvicorn.\n"
+            "Create and use a virtual environment:\n"
+            "  python3 -m venv .venv\n"
+            "  source .venv/bin/activate\n"
+            "  python -m pip install -r requirements.txt\n"
+            "Then run:\n"
+            "  python launch.py"
+        )
+
+
+uvicorn = _load_uvicorn()
 
 HOST = "127.0.0.1"
 PORT = 8000
