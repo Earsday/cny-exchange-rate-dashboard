@@ -40,7 +40,7 @@ def _load_uvicorn():
 uvicorn = _load_uvicorn()
 
 HOST = "127.0.0.1"
-PORT = 8000
+PORT = 1807
 URL = f"http://{HOST}:{PORT}"
 
 

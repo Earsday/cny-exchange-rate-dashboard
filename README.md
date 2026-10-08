@@ -48,7 +48,7 @@ Using Make (recommended):
 ```bash
 make setup
 make run
-# if port 8000 is occupied
+# if port 1807 is occupied
 make stop
 ```
 
@@ -65,10 +65,10 @@ python3 launch.py
 Or start the server manually:
 
 ```bash
-uvicorn app:app --reload
-# Open http://localhost:8000
-# Terminal UI at http://localhost:8000/v2
-# Fiori UI at http://localhost:8000/v3
+uvicorn app:app --reload --port 1807
+# Open http://localhost:1807
+# Terminal UI at http://localhost:1807/v2
+# Fiori UI at http://localhost:1807/v3
 ```
 
 ## Data Collection

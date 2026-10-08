@@ -8,7 +8,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make setup       Create .venv and install requirements"
 	@echo "  make run         Start the app and open browser"
-	@echo "  make stop        Stop any process listening on port 8000"
+	@echo "  make stop        Stop any process listening on port 1807"
 	@echo "  make collect     Collect today's rates"
 	@echo "  make backfill    Collect last 90 days"
 	@echo "  make backfill-30 Collect last 30 days with 4 workers"
@@ -19,18 +19,18 @@ setup:
 	$(VENV_PY) -m pip install -r requirements.txt
 
 run:
-	@if lsof -iTCP:8000 -sTCP:LISTEN -n -P >/dev/null 2>&1; then \
-		echo "Port 8000 is already in use. Run 'make stop' first or close the existing server."; \
+	@if lsof -iTCP:1807 -sTCP:LISTEN -n -P >/dev/null 2>&1; then \
+		echo "Port 1807 is already in use. Run 'make stop' first or close the existing server."; \
 		exit 1; \
 	fi
 	$(VENV_PY) launch.py
 
 stop:
-	@pids=$$(lsof -tiTCP:8000 -sTCP:LISTEN -n -P); \
+	@pids=$$(lsof -tiTCP:1807 -sTCP:LISTEN -n -P); \
 	if [ -z "$$pids" ]; then \
-		echo "No process is listening on port 8000."; \
+		echo "No process is listening on port 1807."; \
 	else \
-		echo "Stopping process(es) on port 8000: $$pids"; \
+		echo "Stopping process(es) on port 1807: $$pids"; \
 		kill $$pids; \
 	fi
 

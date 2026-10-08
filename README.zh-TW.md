@@ -48,10 +48,10 @@ python launch.py
 或手動啟動服務：
 
 ```bash
-uvicorn app:app --reload
-# 開啟 http://localhost:8000
-# 終端介面：http://localhost:8000/v2
-# Fiori 介面：http://localhost:8000/v3
+uvicorn app:app --reload --port 1807
+# 開啟 http://localhost:1807
+# 終端介面：http://localhost:1807/v2
+# Fiori 介面：http://localhost:1807/v3
 ```
 
 ## 資料採集

@@ -3,7 +3,7 @@ FastAPI backend — serves exchange rate data and the dashboard.
 
 Usage:
     uvicorn app:app --reload
-    Then open http://localhost:8000
+    Then open http://localhost:1807
 """
 
 from fastapi import FastAPI, Query, HTTPException, Request

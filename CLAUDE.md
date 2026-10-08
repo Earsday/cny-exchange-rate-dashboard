@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 pip install -r requirements.txt
 python collect.py --backfill   # Initial data load (last 90 days)
-uvicorn app:app --reload       # Start server at http://localhost:8000
+uvicorn app:app --reload --port 1807  # Start server at http://localhost:1807
 python launch.py               # Start server and open browser in one step
 ```
 
