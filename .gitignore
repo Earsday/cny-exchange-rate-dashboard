@@ -1,3 +1,6 @@
+# Data (rebuilt locally via: python collect.py --backfill)
+rates.db
+
 # Python
 __pycache__/
 *.pyc
