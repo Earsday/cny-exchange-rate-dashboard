@@ -35,6 +35,8 @@
 pip install -r requirements.txt
 ```
 
+> **注意：** `rates.db` 不包含在版本庫中，克隆後需執行 `python collect.py --backfill` 以建立本地資料庫。
+
 ## 快速開始
 
 ```bash

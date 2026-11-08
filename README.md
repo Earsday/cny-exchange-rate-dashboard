@@ -41,6 +41,8 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
+> **Note:** `rates.db` is not included in the repository. You must run `python collect.py --backfill` after cloning to build the local database.
+
 ## Quick Start
 
 Using Make (recommended):
